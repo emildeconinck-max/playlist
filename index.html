@@ -61,6 +61,17 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
   transition:opacity .25s ease;
 }
 .glass:hover::after{opacity:.55}
+/* typing bars and their round buttons: a light, solid frosted pill with a crisp hairline (iOS style) */
+.field.glass, .bar > .circle.glass:not(.send), #f-msg:not(.has-text) > .send.glass, .pm-form > .circle.glass{
+  background:linear-gradient(180deg,rgba(243,243,243,.94) 0%,rgba(229,229,229,.92) 55%,rgba(236,236,236,.94) 100%);
+  -webkit-backdrop-filter:blur(20px) saturate(1.3);backdrop-filter:blur(20px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 1.5px rgba(0,0,0,.05),
+    0 0 0 .75px rgba(0,0,0,.26),0 1px 2px rgba(0,0,0,.06),0 8px 16px -8px rgba(0,0,0,.14);
+  color:var(--ink);
+}
+.field.glass::before, .bar > .circle.glass::before{opacity:.5}
+.field.glass:focus-within{box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 1.5px rgba(0,0,0,.05),0 0 0 .75px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.06),0 8px 16px -8px rgba(0,0,0,.14),0 0 0 4px rgba(10,132,255,.12)}
+input,textarea{caret-color:#0A84FF}
 .glass.live:hover::after,.glass.live.pressed::after{opacity:1}
 .glass > *{position:relative;z-index:2}
 /* tinted glass in a profile colour (bubbles, send button) */
@@ -284,7 +295,24 @@ body[data-screen=s-admin] .overlay{opacity:0}
 .chip.rare{background:linear-gradient(120deg,#FFE9A8,#F7C6FF,#B9E6FF);color:#5A3B00}
 /* rare codes: the admin designs the bubble (texture image, colour, text colour, weight, roundness) */
 .glass.tinted.rare{--rim-a:#fff;--rim-b:rgba(255,255,255,.35);
-  background:linear-gradient(180deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,0) 55%,rgba(255,255,255,.12) 100%),linear-gradient(var(--tint),var(--tint)),var(--tex,none) center/cover}
+  background:
+    linear-gradient(180deg,rgba(255,255,255,calc(.06 + .62*var(--gloss,.4))) 0%,rgba(255,255,255,0) 52%,rgba(255,255,255,calc(.03 + .22*var(--gloss,.4))) 100%),
+    linear-gradient(110deg,rgba(255,255,255,0) 40%,rgba(255,255,255,var(--shine,0)) 50%,rgba(255,255,255,0) 60%),
+    linear-gradient(var(--tint),var(--tint)),
+    var(--tex,none);
+  background-size:100% 100%,260% 100%,100% 100%,var(--tsz,cover);
+  background-position:0 0,160% 0,0 0,var(--tx,50%) var(--ty,50%);
+  background-repeat:no-repeat,no-repeat,no-repeat,repeat;
+  box-shadow:var(--glass-shadow),0 0 var(--glowr,0px) var(--glowc,transparent)}
+/* shimmer: a band of light sweeps across now and then */
+.glass.tinted.rare.shimmer{--shine:.6;animation:shim 3.4s ease-in-out infinite}
+.bubble.rare.shimmer.new{animation:bub .6s cubic-bezier(.2,.9,.3,1.3),shim 3.4s ease-in-out .6s infinite}
+@keyframes shim{0%{background-position:0 0,160% 0,0 0,var(--tx,50%) var(--ty,50%)}55%,100%{background-position:0 0,-60% 0,0 0,var(--tx,50%) var(--ty,50%)}}
+#rare-preview .bubble{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+#rare-preview.nodrag .bubble{cursor:default}
+.tog[aria-pressed=true]{--tint:rgba(52,199,89,.82);color:#fff}
+.cd-card{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cd-card .a-in{flex:1;min-width:190px}
 .rare-badge{color:#7A4B00;background:linear-gradient(120deg,rgba(255,214,120,.5),rgba(240,170,255,.45),rgba(150,215,255,.5))}
 .rare-body{overflow-y:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:10px}
 .rare-body .lab-preview{min-height:128px;justify-content:center}
@@ -552,6 +580,11 @@ body[data-screen=s-admin] .overlay{opacity:0}
         <button type="button" role="tab" data-tab="t-lab">Experimental</button>
       </div>
       <div class="a-panel" id="t-screen" role="tabpanel">
+        <form class="glass card cd-card" id="f-count" autocomplete="off">
+          <span class="gen-label">Countdown to</span>
+          <input class="a-in" id="cd-date" type="datetime-local" aria-label="Countdown date and time" required>
+          <button class="a-btn glass green live" type="submit">Save</button>
+        </form>
         <form class="glass card a-stack" id="f-screen" autocomplete="off">
           <div class="layers" id="ed-layers" aria-label="Texts on the screen (up to 3)"></div>
           <textarea id="a-screen" rows="2" maxlength="280" placeholder="Type the text for everyone's screen" aria-label="Screen text"></textarea>
@@ -618,6 +651,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
             <button type="button" data-f="all" aria-checked="true" role="radio">All</button>
             <button type="button" data-f="claimed" aria-checked="false" role="radio">Claimed</button>
             <button type="button" data-f="free" aria-checked="false" role="radio">Free</button>
+            <button type="button" data-f="rare" aria-checked="false" role="radio">Rare</button>
           </div>
           <button class="a-btn sm glass live" type="button" id="a-copyfree">Copy free codes</button>
         </div>
@@ -697,6 +731,14 @@ body[data-screen=s-admin] .overlay{opacity:0}
         </div></div>
       <div class="ed-row"><span class="ed-lbl">Weight</span><input class="ed-range" id="rare-weight" type="range" min="0" max="6" step="1" aria-label="Font weight"><span class="ed-val" id="rare-weight-v"></span></div>
       <div class="ed-row"><span class="ed-lbl">Round</span><input class="ed-range" id="rare-radius" type="range" min="0" max="30" aria-label="Roundness"><span class="ed-val" id="rare-radius-v"></span></div>
+      <p class="a-muted" style="margin:4px 0 0">Image crop: drag the preview bubbles, or use the sliders</p>
+      <div class="ed-row"><span class="ed-lbl">Zoom</span><input class="ed-range" id="rare-zoom" type="range" min="100" max="400" aria-label="Image zoom"><span class="ed-val" id="rare-zoom-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Across</span><input class="ed-range" id="rare-px" type="range" min="0" max="100" aria-label="Image position left to right"><span class="ed-val" id="rare-px-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Up/down</span><input class="ed-range" id="rare-py" type="range" min="0" max="100" aria-label="Image position top to bottom"><span class="ed-val" id="rare-py-v"></span></div>
+      <p class="a-muted" style="margin:4px 0 0">Effects</p>
+      <div class="ed-row"><span class="ed-lbl">Gloss</span><input class="ed-range" id="rare-gloss" type="range" min="0" max="100" aria-label="Gloss"><span class="ed-val" id="rare-gloss-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Glow</span><input class="ed-range" id="rare-glow" type="range" min="0" max="100" aria-label="Glow"><span class="ed-val" id="rare-glow-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Shimmer</span><button class="a-btn sm glass live tog" type="button" id="rare-shimmer" aria-pressed="false">Off</button></div>
       <div class="a-row wrap">
         <button class="a-btn glass live danger" type="button" id="rare-remove">Make normal</button>
         <span style="flex:1"></span>
@@ -938,6 +980,8 @@ async function firebaseApi(cfg){
       return {ok:true}; }); },
     deleteMessage(id){ return fs.deleteDoc(fs.doc(db,"messages",id)); },
     setScreen(cfg){ return fs.setDoc(fs.doc(db,"site","screen"),{...cfg,ts:fs.serverTimestamp()}); },
+    watchCountdown(cb){ return fs.onSnapshot(fs.doc(db,"site","countdown"),s=>cb(s.exists()&&s.data().target?s.data().target.toMillis():null),e=>console.error(e)); },
+    setCountdown(ms){ return fs.setDoc(fs.doc(db,"site","countdown"),{target:fs.Timestamp.fromMillis(ms),ts:fs.serverTimestamp()}); },
     // rare looks (one doc per code), private messages and likes
     watchStyles(cb){ return fs.onSnapshot(fs.collection(db,"styles"),s=>{ const o={}; s.docs.forEach(d=>o[d.id]=d.data()); cb(o); },e=>console.error(e)); },
     async setRare(code,st){ await fs.setDoc(fs.doc(db,"styles",code),st); await fs.updateDoc(codeRef(code),{kind:'rare'}); },
@@ -1010,7 +1054,9 @@ function localApi(){
     async deleteCode(c){ mut(d=>{ delete d.codes[c]; delete d.shades[c]; delete d.kinds[c]; }); },
     async renameCode(c,name){ return mut(d=>{ if(taken(d,name,c)) return {ok:false,taken:true}; d.codes[c]=name; return {ok:true}; }); },
     async deleteMessage(id){ mut(d=>{ d.msgs=d.msgs.filter(m=>m.id!==id); }); },
-    async setScreen(cfg){ mut(d=>{ d.screen=cfg; }); }
+    async setScreen(cfg){ mut(d=>{ d.screen=cfg; }); },
+    watchCountdown:cb=>sub(d=>cb(d.countdown||null)),
+    async setCountdown(ms){ mut(d=>{ d.countdown=ms; }); }
   };
 }
 
@@ -1049,8 +1095,10 @@ function rareLook(code){
   // only embedded images are used as texture (never an outside address)
   if(st.texture&&!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(st.texture)) st.texture=null;
   const strength=st.texture?(Number.isFinite(st.strength)?st.strength:.6):0;
+  const n=(v,d)=>Number.isFinite(v)?v:d;
   return {bg:st.tint, tint:hexA(st.tint, st.texture?1-.85*strength:.82), soft:hexA(st.tint,.55), ink:st.ink||'#111',
-    rare:true, weight:st.weight||400, radius:Number.isFinite(st.radius)?st.radius:23, texture:st.texture||null};
+    rare:true, weight:st.weight||400, radius:n(st.radius,23), texture:st.texture||null,
+    zoom:n(st.zoom,1), px:n(st.px,50), py:n(st.py,50), gloss:n(st.gloss,.4), glow:n(st.glow,0), shimmer:!!st.shimmer};
 }
 // the look of one account's bubbles: its rare design, or its green/blue shade
 function adminLook(hex){ // any colour; text turns dark or light for contrast
@@ -1063,7 +1111,14 @@ function paint(el,look,kind,id){
   el.classList.toggle('blue',kind==='blue'); el.classList.toggle('rare',!!look.rare);
   el.style.setProperty('--tint',look.tint); el.style.color=look.ink;
   el.style.fontWeight=look.rare?look.weight:''; el.style.borderRadius=look.rare?look.radius+'px':'';
-  if(look.rare) el.style.setProperty('--tex',look.texture?`url("${look.texture}")`:'none'); else el.style.removeProperty('--tex');
+  if(look.rare){
+    el.style.setProperty('--tex',look.texture?`url("${look.texture}")`:'none');
+    el.style.setProperty('--tsz',look.zoom>1.001?`${Math.round(look.zoom*100)}% auto`:'cover');
+    el.style.setProperty('--tx',look.px+'%'); el.style.setProperty('--ty',look.py+'%');
+    el.style.setProperty('--gloss',look.gloss);
+    el.style.setProperty('--glowr',Math.round(look.glow*26)+'px'); el.style.setProperty('--glowc',hexA(look.bg,.65*look.glow));
+  } else ['--tex','--tsz','--tx','--ty','--gloss','--glowr','--glowc'].forEach(k=>el.style.removeProperty(k));
+  el.classList.toggle('shimmer',!!(look.rare&&look.shimmer));
   if(kind==='blue'&&id) el.style.setProperty('--fd',floatDelay(id));
 }
 function applyMyShade(v){
@@ -1415,7 +1470,20 @@ function showDM(d){
 
 /* ---------- countdown: each unit ticks in when it changes ---------- */
 let tick; const units=[...document.querySelectorAll('#c-time .u')];
-const secondsLeft=()=>Math.max(0,Math.floor((new Date(COUNTDOWN_TARGET).getTime()-Date.now())/1000));
+// the admin can move the countdown (site/countdown); COUNTDOWN_TARGET is only the fallback
+let countdownTarget=new Date(COUNTDOWN_TARGET).getTime();
+const secondsLeft=()=>Math.max(0,Math.floor((countdownTarget-Date.now())/1000));
+const toLocalInput=ms=>{ const d=new Date(ms), p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+api.watchCountdown(ms=>{
+  if(Number.isFinite(ms)) countdownTarget=ms;
+  if(current.id==='chat') startCountdown();
+  if(document.activeElement!==$('cd-date')) $('cd-date').value=toLocalInput(countdownTarget);
+});
+$('f-count').addEventListener('submit',e=>{
+  e.preventDefault(); const ms=new Date($('cd-date').value).getTime();
+  if(!Number.isFinite(ms)) return shake($('f-count'));
+  api.setCountdown(ms).then(()=>toast('Countdown updated for everyone.'),fail('update the countdown'));
+});
 const countdownParts=()=>{ const s=secondsLeft(), p=n=>String(n).padStart(2,'0');
   return [Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(p); };
 function startCountdown(){
@@ -1700,10 +1768,10 @@ function renderCodes(all){
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
   countTo($('st-total'),list.length); countTo($('st-claimed'),claimed); countTo($('st-free'),list.length-claimed);
-  const visible=c=>(codeFilter==='all' || (codeFilter==='claimed')===!!c.username) && matchesQuery(c);
+  const visible=c=>(codeFilter==='all' || (codeFilter==='rare' ? c.kind==='rare' : (codeFilter==='claimed')===!!c.username)) && matchesQuery(c);
   const shown=list.filter(visible).length;
   const empty=$('a-codes-empty'); empty.hidden=shown>0;
-  empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeQuery ? `Nothing matches “${codeQuery}”.` : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
+  empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeQuery ? `Nothing matches “${codeQuery}”.` : codeFilter==='rare' ? 'No rare codes yet. Use "Make rare" on a free code.' : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
   list.forEach((c,i)=>{
     seen.add(c.code); let r=codeRows.get(c.code);
     if(!r){ r=codeRow(c.code); codeRows.set(c.code,r); }
@@ -1749,7 +1817,8 @@ function syncLab(){
 })();
 
 /* rare code designer (free codes only) */
-const rd={texture:null,strength:.6,tint:'#FFD166',ink:'#111111',weight:400,radius:23}; let rdCode=null;
+const RD_DEFAULT={texture:null,strength:.6,tint:'#FFD166',ink:'#111111',weight:400,radius:23,zoom:1,px:50,py:50,gloss:.4,glow:0,shimmer:false};
+const rd={...RD_DEFAULT}; let rdCode=null;
 function drawRare(){
   const box=$('rare-preview'); box.replaceChildren();
   const look=rareLookFrom(rd);
@@ -1758,6 +1827,13 @@ function drawRare(){
   $('rare-strength').disabled=!rd.texture; $('rare-noimg').disabled=!rd.texture;
   const wi=WEIGHTS.findIndex(w=>w[0]===rd.weight); $('rare-weight').value=wi; $('rare-weight-v').textContent=WEIGHTS[wi][1];
   $('rare-radius').value=rd.radius; $('rare-radius-v').textContent=rd.radius+' px';
+  $('rare-zoom').value=Math.round(rd.zoom*100); $('rare-zoom-v').textContent=Math.round(rd.zoom*100)+'%';
+  $('rare-px').value=Math.round(rd.px); $('rare-px-v').textContent=Math.round(rd.px)+'%';
+  $('rare-py').value=Math.round(rd.py); $('rare-py-v').textContent=Math.round(rd.py)+'%';
+  ['rare-zoom','rare-px','rare-py'].forEach(id=>$(id).disabled=!rd.texture); $('rare-preview').classList.toggle('nodrag',!rd.texture);
+  $('rare-gloss').value=Math.round(rd.gloss*100); $('rare-gloss-v').textContent=Math.round(rd.gloss*100)+'%';
+  $('rare-glow').value=Math.round(rd.glow*100); $('rare-glow-v').textContent=Math.round(rd.glow*100)+'%';
+  $('rare-shimmer').setAttribute('aria-pressed',rd.shimmer); $('rare-shimmer').textContent=rd.shimmer?'On':'Off';
   document.querySelectorAll('#rare-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===rd.tint));
   document.querySelectorAll('#rare-inks .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===rd.ink));
   $('rare-tint').value=rd.tint.toLowerCase(); $('rare-ink').value=rd.ink.toLowerCase();
@@ -1765,7 +1841,7 @@ function drawRare(){
 function rareLookFrom(st){ const keep=styles; styles={_:st}; const l=rareLook('_'); styles=keep; return l; }
 function openRare(code){
   rdCode=code; const c=codeList.find(x=>x.code===code); const st=styles[code];
-  Object.assign(rd,{texture:null,strength:.6,tint:'#FFD166',ink:'#111111',weight:400,radius:23},st||{});
+  Object.assign(rd,RD_DEFAULT,st||{});
   $('rare-title').textContent=`Code ${code}`; $('rare-remove').hidden=!(c&&c.kind==='rare');
   drawRare(); $('rare-wrap').hidden=false;
 }
@@ -1789,13 +1865,35 @@ $('rare-noimg').addEventListener('click',()=>{ rd.texture=null; $('rare-file').v
 $('rare-strength').addEventListener('input',e=>{ rd.strength=+e.target.value/100; drawRare(); });
 $('rare-weight').addEventListener('input',e=>{ rd.weight=WEIGHTS[+e.target.value][0]; drawRare(); });
 $('rare-radius').addEventListener('input',e=>{ rd.radius=+e.target.value; drawRare(); });
+$('rare-zoom').addEventListener('input',e=>{ rd.zoom=+e.target.value/100; drawRare(); });
+$('rare-px').addEventListener('input',e=>{ rd.px=+e.target.value; drawRare(); });
+$('rare-py').addEventListener('input',e=>{ rd.py=+e.target.value; drawRare(); });
+$('rare-gloss').addEventListener('input',e=>{ rd.gloss=+e.target.value/100; drawRare(); });
+$('rare-glow').addEventListener('input',e=>{ rd.glow=+e.target.value/100; drawRare(); });
+$('rare-shimmer').addEventListener('click',()=>{ rd.shimmer=!rd.shimmer; drawRare(); });
+// drag a preview bubble to move the image inside it (the crop)
+let rdDrag=null;
+$('rare-preview').addEventListener('pointerdown',e=>{
+  const b=e.target.closest('.bubble'); if(!b||!rd.texture) return;
+  e.preventDefault(); try{ b.setPointerCapture(e.pointerId); }catch{}
+  rdDrag={x:e.clientX,y:e.clientY,px:rd.px,py:rd.py,w:b.offsetWidth,h:b.offsetHeight};
+});
+$('rare-preview').addEventListener('pointermove',e=>{
+  if(!rdDrag) return;
+  rd.px=clamp(rdDrag.px-(e.clientX-rdDrag.x)/rdDrag.w*100/rd.zoom,0,100);
+  rd.py=clamp(rdDrag.py-(e.clientY-rdDrag.y)/rdDrag.h*100/rd.zoom,0,100);
+  drawRare();
+});
+['pointerup','pointercancel'].forEach(t=>$('rare-preview').addEventListener(t,()=>{ rdDrag=null; }));
 document.querySelectorAll('#rare-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ rd.tint=b.dataset.c; drawRare(); }));
 document.querySelectorAll('#rare-inks .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ rd.ink=b.dataset.c; drawRare(); }));
 $('rare-tint').addEventListener('input',e=>{ rd.tint=e.target.value.toUpperCase(); drawRare(); });
 $('rare-ink').addEventListener('input',e=>{ rd.ink=e.target.value.toUpperCase(); drawRare(); });
 $('rare-save').addEventListener('click',async()=>{
   const code=rdCode; if(!code) return;
-  const st={texture:rd.texture||null,strength:Math.round(rd.strength*100)/100,tint:rd.tint,ink:rd.ink,weight:rd.weight,radius:rd.radius};
+  const r2=v=>Math.round(v*100)/100;
+  const st={texture:rd.texture||null,strength:r2(rd.strength),tint:rd.tint,ink:rd.ink,weight:rd.weight,radius:rd.radius,
+    zoom:r2(rd.zoom),px:Math.round(rd.px),py:Math.round(rd.py),gloss:r2(rd.gloss),glow:r2(rd.glow),shimmer:!!rd.shimmer};
   try{ await api.setRare(code,st); closeRare(); toast(`Code ${code} is now a rare code.`); }
   catch(err){ fail('save the rare code')(err); }
 });

@@ -119,7 +119,11 @@ service cloud.firestore {
     match /styles/{code} {
       allow read: if isMember() || isAdmin();
       allow write: if isAdmin()
-        && request.resource.data.keys().hasOnly(['texture','strength','tint','ink','weight','radius'])
+        && request.resource.data.keys().hasOnly(['texture','strength','tint','ink','weight','radius','zoom','px','py','gloss','glow','shimmer'])
+        && inRange(request.resource.data, 'zoom', 1, 4)
+        && inRange(request.resource.data, 'px', 0, 100) && inRange(request.resource.data, 'py', 0, 100)
+        && inRange(request.resource.data, 'gloss', 0, 1) && inRange(request.resource.data, 'glow', 0, 1)
+        && (!('shimmer' in request.resource.data) || request.resource.data.shimmer is bool)
         && (request.resource.data.texture == null
           || (request.resource.data.texture is string && request.resource.data.texture.size() < 400000))
         && request.resource.data.strength is number && request.resource.data.strength >= 0 && request.resource.data.strength <= 1
@@ -162,13 +166,17 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isMember() && resource.data.from == myCode());
     }
 
-    // up to three texts the admin places on everyone's screen (shown on the code screen too, so public)
+    // public site settings: up to three texts on everyone's screen, and the countdown target
+    function inRange(d, k, lo, hi) { return !(k in d) || (d[k] is number && d[k] >= lo && d[k] <= hi); }
     match /site/{doc} {
       allow read: if true;
-      allow write: if isAdmin() && doc == 'screen'
-        && request.resource.data.keys().hasOnly(['items','ts'])
-        && request.resource.data.items is list && request.resource.data.items.size() <= 3
-        && request.resource.data.ts == request.time;
+      allow write: if isAdmin() && request.resource.data.ts == request.time
+        && ((doc == 'screen'
+            && request.resource.data.keys().hasOnly(['items','ts'])
+            && request.resource.data.items is list && request.resource.data.items.size() <= 3)
+          || (doc == 'countdown'
+            && request.resource.data.keys().hasOnly(['target','ts'])
+            && request.resource.data.target is timestamp));
     }
   }
 }
