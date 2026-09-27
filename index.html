@@ -12,6 +12,17 @@
   --placeholder:#9A9A9F;
   --green:#34C759;
   --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  /* the viewer's profile colour (set by JS from their shade) */
+  --me:hsl(135,68%,59%);--me-tint:hsla(135,68%,59%,.8);--me-soft:hsla(135,68%,67%,.55);--me-ink:#0E3B1C;
+  --spring:cubic-bezier(.25,1.7,.45,1);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),              /* top specular edge */
+    inset 0 -1px 1px rgba(0,0,0,.05),                /* lower inner edge */
+    inset 0 -12px 18px -14px rgba(255,255,255,.85),  /* light gathering at the bottom, like thick glass */
+    inset 0 0 14px rgba(255,255,255,.26),            /* inner glow */
+    0 0 0 .5px rgba(0,0,0,.13),                      /* hairline */
+    0 1px 2px rgba(0,0,0,.07),
+    0 10px 24px -6px rgba(0,0,0,.16);                /* soft lift */
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -25,22 +36,17 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
    Layer 2 (::before): specular rim, brighter where the light hits (top-left)
    Layer 3 (::after):  pointer-following highlight on interactive glass            */
 .glass{
-  --tint:rgba(255,255,255,.34);
-  --rim-a:rgba(255,255,255,.95);
-  --rim-b:rgba(255,255,255,.18);
+  --tint:rgba(255,255,255,.26);
+  --rim-a:rgba(255,255,255,.98);
+  --rim-b:rgba(255,255,255,.16);
   --mx:30%;--my:0%;
   position:relative;isolation:isolate;
   background:
-    linear-gradient(180deg,rgba(255,255,255,.30) 0%,rgba(255,255,255,0) 55%),
+    linear-gradient(180deg,rgba(255,255,255,.36) 0%,rgba(255,255,255,.04) 58%,rgba(255,255,255,.14) 100%),
     var(--tint);
-  -webkit-backdrop-filter:blur(8px) saturate(1.8) brightness(1.06);
-  backdrop-filter:blur(8px) saturate(1.8) brightness(1.06);
-  box-shadow:
-    inset 0 -1px 1.5px rgba(0,0,0,.06),            /* lower inner edge */
-    inset 0 0 12px rgba(255,255,255,.35),           /* inner glow */
-    0 0 0 .5px rgba(0,0,0,.16),                     /* hairline */
-    0 1px 2px rgba(0,0,0,.08),
-    0 8px 18px -4px rgba(0,0,0,.14);                /* soft lift, like the Figma drop shadow */
+  -webkit-backdrop-filter:blur(14px) saturate(1.9) brightness(1.05);
+  backdrop-filter:blur(14px) saturate(1.9) brightness(1.05);
+  box-shadow:var(--glass-shadow);
 }
 .glass::before{ /* specular rim */
   content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:1;
@@ -53,8 +59,36 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
   background:radial-gradient(120px circle at var(--mx) var(--my),rgba(255,255,255,.55),rgba(255,255,255,0) 60%);
   transition:opacity .25s ease;
 }
+.glass:hover::after{opacity:.55}
 .glass.live:hover::after,.glass.live.pressed::after{opacity:1}
 .glass > *{position:relative;z-index:2}
+/* tinted glass in a profile colour (bubbles, send button) */
+.glass.tinted{
+  --rim-a:rgba(255,255,255,.9);--rim-b:rgba(255,255,255,.22);
+  background:linear-gradient(180deg,rgba(255,255,255,.32) 0%,rgba(255,255,255,0) 60%,rgba(255,255,255,.1) 100%),var(--tint);
+}
+/* press ripple */
+.rip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:3!important}
+.rip i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);animation:rip .65s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes rip{to{transform:scale(var(--rs,24));opacity:0}}
+
+/* moving light behind the glass: gives the blur something to bend */
+.bg{position:fixed;inset:-12%;z-index:-1;pointer-events:none;transform:translate(var(--px,0),var(--py,0));transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.blob{position:absolute;border-radius:50%;filter:blur(56px);will-change:transform}
+.b1{width:58vmax;height:58vmax;left:-6%;top:-12%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,0) 68%);animation:d1 24s ease-in-out infinite alternate}
+.b2{width:52vmax;height:52vmax;right:-10%;bottom:-14%;background:radial-gradient(circle,var(--me-soft),rgba(255,255,255,0) 70%);animation:d2 30s ease-in-out infinite alternate;transition:background 1s}
+.b3{width:44vmax;height:44vmax;left:34%;top:30%;background:radial-gradient(circle,rgba(150,150,158,.42),rgba(150,150,158,0) 70%);animation:d3 36s ease-in-out infinite alternate}
+.b4{width:30vmax;height:30vmax;left:8%;bottom:4%;background:radial-gradient(circle,rgba(255,255,255,.8),rgba(255,255,255,0) 70%);animation:d4 28s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(22vw,16vh) scale(1.18)}}
+@keyframes d2{to{transform:translate(-24vw,-18vh) scale(.9)}}
+@keyframes d3{to{transform:translate(-26vw,12vh) scale(1.25)}}
+@keyframes d4{to{transform:translate(30vw,-22vh) scale(1.1)}}
+
+/* staggered entrance when a screen opens */
+.screen.enter .stagger{animation:rise .75s cubic-bezier(.2,.9,.25,1.12) both;animation-delay:calc(var(--i,0)*70ms)}
+.screen.enter .staggerX{animation:riseX .75s cubic-bezier(.2,.9,.25,1.12) both;animation-delay:calc(var(--i,0)*70ms)}
+@keyframes rise{from{opacity:0;transform:translateY(16px) scale(.96)}}
+@keyframes riseX{from{opacity:0;transform:translate(-50%,16px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
 .glass.green{
   --tint:rgba(52,199,89,.82);
   --rim-a:rgba(255,255,255,.75);--rim-b:rgba(255,255,255,.12);
@@ -63,20 +97,21 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
   box-shadow:inset 0 -1px 1.5px rgba(0,60,20,.18),0 0 0 .5px rgba(0,90,30,.25),0 1px 2px rgba(0,0,0,.08),0 8px 18px -4px rgba(0,0,0,.14);
 }
 .pill{border-radius:999px}
-/* responsive feel: springy press, gentle lift on hover */
-.live{transition:transform .45s cubic-bezier(.3,1.6,.5,1),box-shadow .3s ease;will-change:transform}
-.live:hover{transform:scale(1.03)}
-.live.pressed{transform:scale(.95);transition-duration:.12s}
+/* liquid feel: lift on hover, squash when pressed, wobble back with a spring */
+.live{transition:transform .6s var(--spring),box-shadow .3s ease,background .3s,color .3s;will-change:transform}
+.live:hover{transform:scale(1.05)}
+.live.pressed{transform:scale(1.07,.9);transition:transform .14s ease-out}
 .circle{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;flex:none}
 .circle:focus-visible{outline:2px solid rgba(10,132,255,.6);outline-offset:2px}
 .field:focus-within{outline:none}
 .circle svg{width:22px;height:22px}
 
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));transition:opacity .35s ease,transform .35s ease}
-.screen.out{opacity:0;transform:scale(.985);pointer-events:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));transition:opacity .4s ease,transform .5s cubic-bezier(.2,.9,.3,1)}
+.screen.out{opacity:0;transform:scale(.97) translateY(8px);pointer-events:none}
 
 .bar{display:flex;align-items:center;gap:8px;width:min(402px,100%)}
-.field{flex:1;height:48px;display:flex;align-items:center;padding:0 22px;min-width:0}
+.field{flex:1;height:48px;display:flex;align-items:center;padding:0 22px;min-width:0;transition:transform .55s var(--spring),box-shadow .3s ease}
+.field:focus-within{transform:scale(1.02);box-shadow:var(--glass-shadow),0 0 0 4px rgba(255,255,255,.5)}
 .field input{flex:1;height:100%}
 .field input::placeholder{color:var(--placeholder)}
 .note{margin-top:12px;font-size:13px;line-height:18px;color:var(--muted);text-align:center;min-height:18px}
@@ -84,8 +119,30 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 .shake{animation:shake .32s}
 @keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-3px)}}
 
-/* logo */
-.logo{width:120px;height:120px;margin-bottom:40px;filter:drop-shadow(0 10px 16px rgba(0,0,0,.10))}
+/* logo: floats, and tilts towards the pointer */
+.logo-wrap{margin-bottom:40px}
+.logo-float{animation:float 6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-7px)}}
+.logo{display:block;width:120px;height:120px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.12));transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .8s cubic-bezier(.2,.9,.3,1.2)}
+
+/* profile colour picker */
+.shade{display:flex;align-items:center;gap:12px;height:48px;padding:0 18px;width:min(402px,100%);margin-top:18px}
+.shade-lbl{font-size:15px;color:var(--muted);white-space:nowrap}
+.shade-dot{width:22px;height:22px;border-radius:50%;flex:none;background:var(--me);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2),inset 0 2px 3px rgba(255,255,255,.6),0 2px 6px rgba(0,0,0,.15);transition:background .15s}
+.shade-range{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:30px;background:none;cursor:pointer;margin:0}
+.shade-range:focus-visible{outline:none}
+.shade-range::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:linear-gradient(90deg,hsl(135,28%,94%),hsl(135,53%,72%),hsl(135,78%,50%));box-shadow:inset 0 0 0 .5px rgba(0,0,0,.16),inset 0 1px 2px rgba(0,0,0,.1)}
+.shade-range::-moz-range-track{height:10px;border-radius:999px;background:linear-gradient(90deg,hsl(135,28%,94%),hsl(135,53%,72%),hsl(135,78%,50%));box-shadow:inset 0 0 0 .5px rgba(0,0,0,.16)}
+.shade-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 55%,rgba(240,240,240,.7));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.22),inset 0 -2px 3px rgba(0,0,0,.06);transition:transform .45s var(--spring)}
+.shade-range::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 55%,rgba(240,240,240,.7));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.22);transition:transform .45s var(--spring)}
+.shade-range:active::-webkit-slider-thumb,.shade-range:focus-visible::-webkit-slider-thumb{transform:scale(1.3,1.18)}
+.shade-range:active::-moz-range-thumb{transform:scale(1.3,1.18)}
+.me-color{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 5px);right:max(16px,calc(50% - 201px));z-index:3;width:36px;height:36px}
+.me-color .shade-dot{width:20px;height:20px}
+.shade-pop{position:fixed;z-index:8;top:calc(max(28px,env(safe-area-inset-top)) + 50px);right:max(16px,calc(50% - 201px));width:min(290px,calc(100% - 32px));border-radius:24px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;transform-origin:92% 0;animation:popin .45s var(--spring)}
+@keyframes popin{from{opacity:0;transform:scale(.6)}}
+.pop-title{margin:0;font-size:13px;color:var(--muted)}
+.pop-prev{align-self:flex-end;padding:10px 16px;border-radius:21px;background:var(--me-tint);color:var(--me-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 0 .5px rgba(0,0,0,.1);transition:background .15s,color .15s}
 
 /* username step */
 .appear{opacity:0;transform:scale(.6);width:0;margin-left:-8px;overflow:hidden;transition:all .35s cubic-bezier(.2,.9,.3,1.2)}
@@ -96,6 +153,17 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 /* the conversation scrolls underneath the glass countdown and message bar, like iOS */
 .count{position:absolute;top:max(28px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3;height:46px;padding:0 22px;display:flex;align-items:center;font-variant-numeric:tabular-nums;white-space:nowrap}
 .count b{font-weight:700;font-size:19px;letter-spacing:.01em}
+.count .u{display:inline-block;min-width:1.25em;text-align:center}
+.count .u.tick{animation:tick .5s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes tick{from{transform:translateY(-55%) scale(.9);opacity:0}}
+/* send button fills with your colour once there is something to send */
+#f-msg .send svg{stroke:currentColor;transition:transform .5s var(--spring)}
+#f-msg.has-text .send{--tint:var(--me-tint);color:var(--me-ink)}
+#f-msg.has-text .send svg{transform:translateY(-1px) scale(1.08)}
+.send.launch svg{animation:launch .5s ease}
+@keyframes launch{40%{transform:translateY(-16px);opacity:0}41%{transform:translateY(14px);opacity:0}}
+#lock.locked{animation:boing .6s var(--spring)}
+@keyframes boing{30%{transform:scale(1.2,.85)}60%{transform:scale(.92,1.08)}}
 /* subtle log-out × under the countdown */
 .logout{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 52px);left:50%;transform:translateX(-50%);z-index:3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--muted);opacity:.7;transition:opacity .2s,background .2s}
 .logout:hover,.logout:focus-visible{opacity:1;background:rgba(255,255,255,.45)}
@@ -108,12 +176,16 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 .log::-webkit-scrollbar{display:none}
 .log .spacer{margin-top:auto}
 .stamp{align-self:center;font-size:13px;color:var(--muted);margin:6px 0 2px}
-.who{font-size:13px;line-height:18px;color:var(--muted);margin:8px 0 -6px 18px}
-.bubble{max-width:78%;padding:12px 18px;border-radius:23px;overflow-wrap:anywhere;white-space:pre-wrap;align-self:flex-start;animation:pop .25s ease}
-.bubble.mine{align-self:flex-end}
-@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.97)}}
+.who{font-size:13px;line-height:18px;color:var(--muted);margin:8px 0 -6px 18px;display:flex;align-items:center;gap:6px}
+.who i{width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)}
+.bubble{max-width:78%;padding:12px 18px;border-radius:23px;overflow-wrap:anywhere;white-space:pre-wrap;align-self:flex-start;transform-origin:0 100%;transition:transform .5s var(--spring),background .2s,color .2s}
+.bubble.mine{align-self:flex-end;transform-origin:100% 100%}
+.bubble:hover{transform:scale(1.015)}
+.bubble.new{animation:bub .6s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes bub{from{opacity:0;transform:translateY(12px) scale(.55)}}
 .empty{margin:auto;color:var(--muted);font-size:15px}
-.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);padding:10px 18px;font-size:14px;z-index:9}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);padding:10px 18px;font-size:14px;z-index:9;animation:toastin .5s var(--spring)}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}}
 
 /* message the admin writes on everyone's screen */
 .announce{position:fixed;left:50%;top:max(28px,env(safe-area-inset-top));transform:translateX(-50%);z-index:4;width:max-content;max-width:min(402px,calc(100% - 32px));padding:12px 20px;border-radius:23px;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500}
@@ -137,8 +209,13 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 .a-body{display:flex;flex-direction:column;gap:14px}
 .a-panel{display:flex;flex-direction:column;gap:10px}
 .tabs{display:flex;gap:4px;padding:4px;height:44px}
-.tabs button{flex:1;border-radius:999px;font-size:15px;font-weight:500;color:var(--muted);transition:background .2s,color .2s}
-.tabs button[aria-selected=true]{background:rgba(255,255,255,.8);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabs button{flex:1;border-radius:999px;font-size:15px;font-weight:500;color:var(--muted);transition:color .25s}
+.tabs button[aria-selected=true],.seg button[aria-checked=true]{color:var(--ink)}
+/* sliding selection pill (tabs and filters) */
+.glass > .ind{position:absolute;z-index:1;left:0;top:4px;bottom:4px;width:0;border-radius:999px;background:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 #fff,0 1px 3px rgba(0,0,0,.12),0 4px 10px -4px rgba(0,0,0,.12);transition:transform .55s var(--spring),width .45s var(--spring)}
+.seg > .ind{top:3px;bottom:3px}
+.a-panel:not([hidden]){animation:rise .45s cubic-bezier(.2,.9,.25,1.1)}
+.acct{animation:rise .45s cubic-bezier(.2,.9,.25,1.1) both}
 .a-stack{display:flex;flex-direction:column;gap:10px}
 .a-stack textarea{font:inherit;color:var(--ink);background:none;border:0;outline:none;resize:vertical;min-height:72px;width:100%}
 .a-stack textarea::placeholder{color:var(--placeholder)}
@@ -160,8 +237,7 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 .a-in{flex:1;min-width:140px;height:36px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
 .a-in::placeholder,.acct input::placeholder{color:var(--placeholder)}
 .seg{display:flex;gap:2px;padding:3px;height:36px;flex:none}
-.seg button{padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted)}
-.seg button[aria-checked=true]{background:rgba(255,255,255,.85);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button{padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted);transition:color .25s}
 .a-row .seg + .a-btn{margin-left:auto}
 .a-empty{text-align:center;padding:12px 0}
 .acct{display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap}
@@ -183,14 +259,16 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 .amsg-meta .grow{flex:1;min-width:0}
 .tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:999px;white-space:nowrap}
 .amsg-text{white-space:pre-wrap;overflow-wrap:anywhere}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.dot{transition:background .3s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body data-screen="s-code">
+<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i></div>
 
 <!-- 1. CODE -->
-<section class="screen" id="s-code" aria-label="Enter code">
-  <svg class="logo" viewBox="0 0 180 180" aria-hidden="true">
+<section class="screen enter" id="s-code" aria-label="Enter code">
+  <div class="logo-wrap stagger" style="--i:0"><div class="logo-float"><svg class="logo" id="logo" viewBox="0 0 180 180" aria-hidden="true">
     <defs>
       <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#FAFAFA"/><stop offset=".6" stop-color="#EDEDED"/><stop offset="1" stop-color="#E2E2E2"/>
@@ -200,19 +278,19 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
     <rect x=".5" y=".5" width="179" height="179" rx="39.5" fill="none" stroke="rgba(0,0,0,.14)"/>
     <rect x="1.5" y="1.5" width="177" height="177" rx="38.5" fill="none" stroke="rgba(255,255,255,.9)"/>
     <path d="M 152.32 19.18 Q 152.21 18.36 151.41 18.15 Q 150.62 17.93 149.04 17.50 Q 147.45 17.07 109.22 24.12 Q 70.99 31.18 69.43 32.10 Q 67.87 33.02 67.16 33.44 Q 66.45 33.85 66.21 34.64 Q 65.97 35.43 65.14 38.09 Q 64.32 40.75 64.15 77.90 Q 63.98 115.06 62.29 117.16 Q 60.59 119.27 48.91 122.41 Q 37.23 125.55 32.99 128.75 Q 28.76 131.94 27.18 135.03 Q 25.61 138.11 25.25 141.92 Q 24.90 145.73 25.99 149.22 Q 27.07 152.72 29.37 155.39 Q 31.67 158.07 36.66 160.42 Q 41.66 162.78 47.42 162.46 Q 53.18 162.14 58.33 159.61 Q 63.47 157.07 67.39 152.38 Q 71.30 147.68 73.06 141.09 Q 74.83 134.51 74.87 104.66 Q 74.92 74.82 75.73 72.70 Q 76.55 70.59 76.84 69.82 Q 77.14 69.05 77.86 68.66 Q 78.59 68.27 80.55 67.23 Q 82.51 66.18 109.22 60.99 Q 135.93 55.80 137.46 56.09 Q 138.99 56.39 139.80 56.54 Q 140.60 56.70 141.04 57.40 Q 141.47 58.10 142.54 59.82 Q 143.61 61.54 143.42 79.24 Q 143.23 96.94 143.22 97.76 Q 143.22 98.59 142.63 99.16 Q 142.04 99.74 140.53 101.23 Q 139.01 102.71 125.39 106.98 Q 111.76 111.24 108.76 115.10 Q 105.75 118.97 105.05 124.06 Q 104.36 129.16 106.65 134.14 Q 108.94 139.13 114.82 142.32 Q 120.69 145.52 128.16 144.84 Q 135.62 144.17 141.06 140.42 Q 146.51 136.66 149.95 130.13 Q 153.39 123.60 153.86 78.78 Q 154.34 33.96 153.38 26.98 Q 152.43 20.00 152.32 19.18 Z" fill="none" stroke="rgba(0,0,0,.16)" stroke-width="1"/>
-  </svg>
-  <form class="bar" id="f-code" autocomplete="off">
+  </svg></div></div>
+  <form class="bar stagger" style="--i:1" id="f-code" autocomplete="off">
     <label class="field glass pill"><input id="code" inputmode="text" placeholder="code" aria-label="Access code" maxlength="24" autofocus></label>
     <button class="circle glass live" type="submit" aria-label="Enter">
       <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
   </form>
-  <p class="note" id="n-code" role="status"></p>
+  <p class="note stagger" style="--i:2" id="n-code" role="status"></p>
 </section>
 
 <!-- 2. USERNAME -->
 <section class="screen out" id="s-user" aria-label="Choose username" hidden>
-  <form class="bar" id="f-user" autocomplete="off">
+  <form class="bar stagger" style="--i:0" id="f-user" autocomplete="off">
     <label class="field glass pill"><input id="uname" placeholder="Choose username" aria-label="Username" maxlength="20"></label>
     <button class="circle glass live" type="submit" id="lock" aria-label="Lock username">
       <svg id="ic-open" viewBox="0 0 22 24"><path d="M15 11V7a4 4 0 0 0-8 0v1" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/><rect x="2" y="11" width="18" height="12" rx="3"/></svg>
@@ -222,23 +300,29 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
       <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
   </form>
-  <p class="note" id="n-user">You cannot change your username</p>
+  <p class="note stagger" style="--i:1" id="n-user">You cannot change your username</p>
+  <div class="shade glass pill stagger" style="--i:2">
+    <span class="shade-lbl">Your color</span>
+    <input class="shade-range" id="shade-user" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
+    <span class="shade-dot" aria-hidden="true"></span>
+  </div>
 </section>
 
 <!-- 3. CHAT -->
 <section class="screen out" id="chat" aria-label="Chat" hidden>
-  <div class="count glass pill" aria-live="off"><b id="c-time">00 : 00 : 00 : 00</b></div>
-  <button class="logout" type="button" id="logout" aria-label="Log out" title="Log out">
+  <div class="count glass pill staggerX" style="--i:0" aria-live="off"><b id="c-time"><span class="u">00</span> : <span class="u">00</span> : <span class="u">00</span> : <span class="u">00</span></b></div>
+  <button class="logout staggerX" style="--i:1" type="button" id="logout" aria-label="Log out" title="Log out">
     <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
   </button>
   <button class="circle glass live to-admin" type="button" id="to-admin" aria-label="Admin panel" title="Admin panel" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
   </button>
+  <button class="circle glass live me-color" type="button" id="me-color" aria-label="Your color" title="Your color"><span class="shade-dot"></span></button>
   <div class="log" id="log" aria-live="polite"><div class="spacer"></div></div>
-  <form class="bar" id="f-msg" autocomplete="off">
+  <form class="bar staggerX" style="--i:2" id="f-msg" autocomplete="off">
     <label class="field glass pill"><input id="msg" placeholder="Message" aria-label="Message" maxlength="500"></label>
-    <button class="circle glass live" type="submit" aria-label="Send">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+    <button class="circle glass live tinted send" type="submit" aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
     </button>
   </form>
 </section>
@@ -246,13 +330,14 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 <!-- 4. ADMIN (opened by typing the admin code) -->
 <section class="screen out" id="s-admin" aria-label="Admin" hidden>
   <div class="admin">
-    <header class="a-head">
+    <header class="a-head stagger" style="--i:0">
       <h1>Admin</h1>
       <span class="a-muted" id="a-who"></span>
       <button class="a-btn glass live" type="button" id="a-exit">Close</button>
     </header>
     <div class="a-body">
-      <div class="tabs glass pill" role="tablist">
+      <div class="tabs glass pill stagger" style="--i:1" role="tablist">
+        <span class="ind" aria-hidden="true"></span>
         <button type="button" role="tab" data-tab="t-screen">Screen</button>
         <button type="button" role="tab" data-tab="t-accounts">Accounts</button>
         <button type="button" role="tab" data-tab="t-msgs">Messages</button>
@@ -268,7 +353,7 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
         </form>
       </div>
       <div class="a-panel" id="t-accounts" role="tabpanel" hidden>
-        <div class="stats">
+        <div class="stats stagger" style="--i:2">
           <div class="stat glass"><b id="st-total">0</b><span>Codes</span></div>
           <div class="stat glass"><b id="st-claimed">0</b><span>Claimed</span></div>
           <div class="stat glass"><b id="st-free">0</b><span>Free</span></div>
@@ -291,6 +376,7 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
         </div>
         <div class="a-row">
           <div class="seg glass pill" id="a-filter" role="radiogroup" aria-label="Show">
+            <span class="ind" aria-hidden="true"></span>
             <button type="button" data-f="all" aria-checked="true" role="radio">All</button>
             <button type="button" data-f="claimed" aria-checked="false" role="radio">Claimed</button>
             <button type="button" data-f="free" aria-checked="false" role="radio">Free</button>
@@ -301,13 +387,21 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
         <p class="a-muted a-empty" id="a-codes-empty" hidden></p>
       </div>
       <div class="a-panel" id="t-msgs" role="tabpanel" hidden>
-        <p class="a-muted" id="a-mcount"></p>
+        <div class="a-row">
+          <p class="a-muted" id="a-mcount"></p>
+          <button class="a-btn sm glass live danger" type="button" id="a-clearall">Clear all messages</button>
+        </div>
         <div class="a-list" id="a-msgs"></div>
       </div>
     </div>
   </div>
 </section>
 
+<div class="shade-pop glass" id="shade-pop" hidden>
+  <p class="pop-title">Your color</p>
+  <input class="shade-range" id="shade-chat" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
+  <div class="pop-prev">This is how you look</div>
+</div>
 <div class="announce glass" id="announce" role="status" hidden><span id="ann-text"></span></div>
 <div class="toast glass pill" id="toast" hidden></div>
 
@@ -325,6 +419,7 @@ const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts d
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
 const ADMIN_CODE = "admin";                  // typing this (code box or chat box) opens the admin panel
 const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
+const DEFAULT_SHADE = 80;                     // profile colour for people who haven't picked one (0 = greenish white, 100 = vibrant green)
 /* =============================================== */
 const DEMO = new URLSearchParams(location.search).has('demo'); // ?demo forces the offline demo (for testing)
 const TTL = MESSAGE_TTL_HOURS*3600e3;
@@ -381,14 +476,27 @@ function refract(el){
   };
   let t; new ResizeObserver(()=>{clearTimeout(t);t=setTimeout(build,60);}).observe(el); build();
 }
-function responsive(el){ // pointer-following light + spring press
-  el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();
-    el.style.setProperty('--mx',(e.clientX-r.left)+'px');el.style.setProperty('--my',(e.clientY-r.top)+'px');});
-  el.addEventListener('pointerdown',()=>el.classList.add('pressed'));
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>el.classList.remove('pressed')));
-}
+/* delegated, so buttons and bubbles added later behave the same:
+   light follows the pointer on any glass, .live glass squashes and ripples when pressed,
+   and the background drifts a little with the pointer */
+const bgEl=document.querySelector('.bg');
+document.addEventListener('pointermove',e=>{
+  const g=e.target.closest&&e.target.closest('.glass');
+  if(g){ const r=g.getBoundingClientRect(); g.style.setProperty('--mx',(e.clientX-r.left)+'px'); g.style.setProperty('--my',(e.clientY-r.top)+'px'); }
+  bgEl.style.setProperty('--px',((e.clientX/innerWidth-.5)*-28)+'px'); bgEl.style.setProperty('--py',((e.clientY/innerHeight-.5)*-28)+'px');
+},{passive:true});
+document.addEventListener('pointerdown',e=>{
+  const l=e.target.closest&&e.target.closest('.live'); if(!l) return;
+  l.classList.add('pressed');
+  if(l.classList.contains('glass')){
+    const r=l.getBoundingClientRect(), rip=document.createElement('span'), dot=document.createElement('i');
+    rip.className='rip'; dot.style.left=(e.clientX-r.left)+'px'; dot.style.top=(e.clientY-r.top)+'px';
+    dot.style.setProperty('--rs',Math.max(r.width,r.height)/5);
+    rip.append(dot); l.append(rip); setTimeout(()=>rip.remove(),700);
+  }
+});
+['pointerup','pointercancel','dragend'].forEach(t=>document.addEventListener(t,()=>document.querySelectorAll('.live.pressed').forEach(x=>x.classList.remove('pressed'))));
 document.querySelectorAll('.field,.count,.circle').forEach(refract);
-document.querySelectorAll('.live').forEach(responsive);
 
 /* ---------- data layer ---------- */
 async function firebaseApi(cfg){
@@ -404,9 +512,9 @@ async function firebaseApi(cfg){
       // a code is valid only if the admin has created it
       if(/[\/]/.test(code) || code==="." || code==="..") return {valid:false};
       const snap = await fs.getDoc(codeRef(code));
-      return snap.exists() ? {valid:true, username:snap.data().username||null} : {valid:false};
+      return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade} : {valid:false};
     },
-    async claim(code,name){
+    async claim(code,name,shade){
       const lower=name.toLowerCase();
       return fs.runTransaction(db, async tx=>{
         const cRef=fs.doc(db,"codes",code), nRef=fs.doc(db,"usernames",lower);
@@ -414,14 +522,15 @@ async function firebaseApi(cfg){
         if(!c.exists()) throw new Error("code");
         if(c.data().username) return {ok:false, existing:c.data().username};
         if(n.exists()) return {ok:false, taken:true};
-        tx.update(cRef,{username:name, claimedAt:fs.serverTimestamp()});
+        tx.update(cRef,{username:name, claimedAt:fs.serverTimestamp(), shade});
         tx.set(nRef,{code});
         return {ok:true};
       });
     },
-    async send(code,username,text){
-      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,ts:fs.serverTimestamp()});
+    async send(code,username,text,shade){
+      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,shade,ts:fs.serverTimestamp()});
     },
+    setShade(code,shade){ return fs.updateDoc(codeRef(code),{shade}); },
     watch(cb){
       const q=fs.query(fs.collection(db,"messages"),fs.orderBy("ts","desc"),fs.limit(150));
       return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut).reverse()),lost);
@@ -436,7 +545,7 @@ async function firebaseApi(cfg){
     },
     watchCodes(cb){
       return fs.onSnapshot(fs.collection(db,"codes"),s=>cb(s.docs.map(d=>{const c=d.data();
-        return {code:d.id,username:c.username||null,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
+        return {code:d.id,username:c.username||null,shade:c.shade,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
     },
     createCode(code){ return fs.runTransaction(db,async tx=>{
       if((await tx.get(codeRef(code))).exists()) return false;
@@ -459,7 +568,15 @@ async function firebaseApi(cfg){
       tx.update(codeRef(code),{username:name,claimedAt:c.data().claimedAt||fs.serverTimestamp()});
       return {ok:true}; }); },
     deleteMessage(id){ return fs.deleteDoc(fs.doc(db,"messages",id)); },
-    setScreen(text){ return fs.setDoc(fs.doc(db,"site","screen"),{text,ts:fs.serverTimestamp()}); }
+    setScreen(text){ return fs.setDoc(fs.doc(db,"site","screen"),{text,ts:fs.serverTimestamp()}); },
+    async clearMessages(){ // delete in batches (a batch holds at most 500 writes)
+      let n=0;
+      for(;;){
+        const s=await fs.getDocs(fs.query(fs.collection(db,"messages"),fs.limit(400)));
+        if(s.empty) return n;
+        const b=fs.writeBatch(db); s.docs.forEach(d=>b.delete(d.ref)); await b.commit(); n+=s.size;
+      }
+    }
   };
 }
 function localApi(){
@@ -468,7 +585,7 @@ function localApi(){
   const load=()=>{ let d=null; try{d=JSON.parse(store.get(K))}catch{}
     d=d||{codes:{},msgs:[]};
     if(!d.v){ d.codes={...Object.fromEntries(LOCAL_CODES.map(c=>[c,null])),...d.codes}; d.v=2; } // seed the demo codes once
-    d.msgs=d.msgs||[]; d.screen=d.screen||""; return d; };
+    d.msgs=d.msgs||[]; d.screen=d.screen||""; d.shades=d.shades||{}; return d; };
   const subs=new Set(), emit=()=>{const d=load(); subs.forEach(f=>f(d));};
   const save=d=>{store.set(K,JSON.stringify(d)); ch&&ch.postMessage(1); emit();};
   const sub=f=>{subs.add(f); f(load()); return ()=>subs.delete(f);};
@@ -476,17 +593,19 @@ function localApi(){
   const taken=(d,name,code)=>Object.entries(d.codes).some(([c,n])=>c!==code&&n&&n.toLowerCase()===name.toLowerCase());
   ch&&(ch.onmessage=emit); addEventListener("storage",e=>e.key===K&&emit());
   return {
-    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c]}:{valid:false}; },
-    async claim(c,name){ return mut(d=>{ if(!(c in d.codes)) throw new Error("code");
+    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c]}:{valid:false}; },
+    async claim(c,name,shade){ return mut(d=>{ d.shades[c]=shade; if(!(c in d.codes)) throw new Error("code");
       if(d.codes[c]) return {ok:false,existing:d.codes[c]};
       if(taken(d,name,c)) return {ok:false,taken:true};
       d.codes[c]=name; return {ok:true}; }); },
-    async send(code,username,text){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,ts:Date.now()}); }); },
+    async send(code,username,text,shade){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,shade,ts:Date.now()}); }); },
+    async setShade(c,shade){ mut(d=>{ d.shades[c]=shade; }); },
+    async clearMessages(){ return mut(d=>{ const n=d.msgs.length; d.msgs=[]; return n; }); },
     watch:cb=>sub(d=>cb(d.msgs.slice(-150))),
     watchCode:(c,cb)=>sub(d=>cb((c in d.codes)?d.codes[c]:undefined)),
     watchScreen:cb=>sub(d=>cb(d.screen)),
     watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
-    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,claimedAt:null})))),
+    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],claimedAt:null})))),
     async createCode(c){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; return true; }); },
     async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; }); },
     async deleteCode(c){ mut(d=>{ delete d.codes[c]; }); },
@@ -506,13 +625,35 @@ function go(id){
   const next=$(id); if(next===current) return;
   current.classList.add('out'); const prev=current;
   setTimeout(()=>{prev.hidden=true;},350);
-  next.hidden=false; requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.remove('out')));
-  current=next; placeAnnounce();
+  next.hidden=false; next.classList.remove('enter'); void next.offsetWidth; next.classList.add('enter'); // replay the staggered entrance
+  requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.remove('out')));
+  current=next; placeAnnounce(); $('shade-pop').hidden=true;
 }
 const shake=el=>{el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');};
 
-let me={code:null,username:null};
+let me={code:null,username:null,shade:DEFAULT_SHADE};
 let adminOn=false;
+
+/* ---------- profile colour: 0 = greenish white … 100 = vibrant green (never dark) ---------- */
+function shadeOf(v){
+  v=(v===null||v===undefined||!Number.isFinite(+v))?DEFAULT_SHADE:Math.min(100,Math.max(0,+v));
+  const k=v/100, s=Math.round(28+50*k), l=Math.round(94-44*k);
+  return {bg:`hsl(135,${s}%,${l}%)`, tint:`hsla(135,${s}%,${l}%,.8)`, soft:`hsla(135,${s}%,${Math.min(l+8,90)}%,.6)`, ink:l<56?'#fff':'#0E3B1C'};
+}
+function applyMyShade(v){
+  const c=shadeOf(v), r=document.documentElement.style;
+  r.setProperty('--me',c.bg); r.setProperty('--me-tint',c.tint); r.setProperty('--me-soft',c.soft); r.setProperty('--me-ink',c.ink);
+}
+const setMe=(code,username,shade)=>{ me={code,username,shade:Number.isFinite(shade)?shade:DEFAULT_SHADE}; applyMyShade(me.shade); };
+applyMyShade(DEFAULT_SHADE);
+// username screen: pick before locking
+$('shade-user').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); });
+// chat: the colour button opens a small glass popover; it previews live and saves on release
+$('me-color').addEventListener('click',()=>{ const p=$('shade-pop'); p.hidden=!p.hidden; if(!p.hidden) $('shade-chat').value=me.shade; });
+document.addEventListener('pointerdown',e=>{ const p=$('shade-pop'); if(!p.hidden && !e.target.closest('#shade-pop,#me-color')) p.hidden=true; });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('shade-pop').hidden=true; });
+$('shade-chat').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); render(lastList); });
+$('shade-chat').addEventListener('change',e=>{ if(me.code) api.setShade(me.code,+e.target.value).catch(fail('save your color')); });
 
 /* ---------- message the admin writes on everyone's screen ---------- */
 let screenText="";
@@ -542,9 +683,9 @@ $('f-code').addEventListener('submit',async e=>{
   try{
     const r=await api.checkCode(code);
     if(!r.valid){ note.className='note err'; note.textContent="That code doesn't work."; shake($('f-code')); $('code').select(); return; }
-    me.code=code; store.set('playlist-code',code); note.textContent='';
-    if(r.username){ me.username=r.username; openChat(); }
-    else { go('s-user'); setTimeout(()=>$('uname').focus(),360); }
+    setMe(code,r.username,r.shade); store.set('playlist-code',code); note.textContent='';
+    if(r.username) openChat();
+    else { $('shade-user').value=me.shade; go('s-user'); setTimeout(()=>$('uname').focus(),360); }
   }catch(err){ console.error(err); note.className='note err'; note.textContent="Couldn't check the code. Try again."; }
 });
 
@@ -556,12 +697,12 @@ $('f-user').addEventListener('submit',async e=>{
   if(!NAME_RE.test(name)){ note.className='note err'; note.textContent='Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'; return shake($('f-user')); }
   $('lock').disabled=true;
   try{
-    const r=await api.claim(me.code,name);
+    const r=await api.claim(me.code,name,me.shade);
     if(r.taken){ note.className='note err'; note.textContent='That username is taken. Pick another.'; shake($('f-user')); return; }
     if(r.existing){ me.username=r.existing; toast(`This code is already ${r.existing}.`); return openChat(); }
     me.username=name; locked=true;
     $('uname').readOnly=true; $('ic-open').hidden=true; $('ic-closed').hidden=false;
-    $('lock').setAttribute('aria-label','Username locked');
+    $('lock').setAttribute('aria-label','Username locked'); $('lock').classList.add('locked');
     note.className='note'; note.textContent=`Locked as ${name}`;
     const nx=$('next'); nx.classList.add('on'); nx.tabIndex=0; setTimeout(()=>nx.focus(),350);
   }catch(err){ console.error(err); note.className='note err'; note.textContent="Couldn't save your username. Try again."; }
@@ -570,7 +711,7 @@ $('f-user').addEventListener('submit',async e=>{
 $('next').addEventListener('click',()=>locked&&openChat());
 function resetUserStep(){
   locked=false; $('uname').value=''; $('uname').readOnly=false;
-  $('ic-open').hidden=false; $('ic-closed').hidden=true; $('lock').setAttribute('aria-label','Lock username');
+  $('ic-open').hidden=false; $('ic-closed').hidden=true; $('lock').setAttribute('aria-label','Lock username'); $('lock').classList.remove('locked');
   $('next').classList.remove('on'); $('next').tabIndex=-1;
   const n=$('n-user'); n.className='note'; n.textContent='You cannot change your username';
 }
@@ -578,7 +719,7 @@ function resetUserStep(){
 /* ---------- 3. chat ---------- */
 let unwatch=null, unwatchMe=null;
 function openChat(){
-  go('chat'); startCountdown();
+  go('chat'); startCountdown(); applyMyShade(me.shade);
   $('to-admin').hidden = store.get('playlist-admin')!=='1';
   if(!unwatch) unwatch=api.watch(render); else render(lastList); // re-render so "mine" matches the account that just logged in
   if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
@@ -587,7 +728,7 @@ function openChat(){
 // log out: forget the code on this browser. Logging back in with the same code keeps the username.
 $('logout').addEventListener('click',()=>{
   unwatchMe&&unwatchMe(); unwatchMe=null;
-  store.del('playlist-code'); me={code:null,username:null}; resetUserStep();
+  store.del('playlist-code'); setMe(null,null); resetUserStep();
   $('code').value=''; $('n-code').textContent='';
   go('s-code'); setTimeout(()=>$('code').focus(),360);
 });
@@ -597,13 +738,13 @@ function onMyCode(name){
   if(!me.code) return;
   if(name===undefined){
     unwatchMe&&unwatchMe(); unwatchMe=null;
-    store.del('playlist-code'); me={code:null,username:null}; resetUserStep();
+    store.del('playlist-code'); setMe(null,null); resetUserStep();
     if(current.id!=='s-admin'){ go('s-code'); toast('Your code no longer works.'); }
     return;
   }
   if(name===null){
     me.username=null;
-    if(current.id==='chat'){ resetUserStep(); go('s-user'); toast('Your username was reset. Choose a new one.'); }
+    if(current.id==='chat'){ resetUserStep(); $('shade-user').value=me.shade; go('s-user'); toast('Your username was reset. Choose a new one.'); }
     return;
   }
   if(name!==me.username){
@@ -618,8 +759,10 @@ const fmtDay=t=>{const d=new Date(t),n=new Date();return (d.toDateString()===n.t
 let lastList=[], shownCount=-1;
 const fresh=list=>list.filter(m=>Date.now()-m.ts<TTL);
 setInterval(()=>{ if(fresh(lastList).length!==shownCount) render(lastList); },60e3);
+const seenMsgs=new Set(); let firstRender=true;
 function render(all){
   lastList=all; const list=fresh(all); shownCount=list.length;
+  const latest={}; for(const m of all) if(Number.isFinite(m.shade)) latest[m.code]=m.shade; // a person's newest colour applies to all their bubbles
   const log=$('log'); const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<60;
   log.replaceChildren(Object.assign(document.createElement('div'),{className:'spacer'}));
   if(!list.length){ log.append(Object.assign(document.createElement('p'),{className:'empty',textContent:'No messages yet. Say hi.'})); return; }
@@ -627,10 +770,18 @@ function render(all){
   for(const m of list){
     if(!prev || m.ts-prev.ts>15*60e3) log.append(Object.assign(document.createElement('div'),{className:'stamp',textContent:fmtDay(m.ts)}));
     const mine=m.code===me.code;
-    if(!mine && (!prev || prev.code!==m.code)) log.append(Object.assign(document.createElement('div'),{className:'who',textContent:m.username}));
-    const b=document.createElement('div'); b.className='bubble glass'+(mine?' mine green':''); b.textContent=m.text; b.title=fmtTime(m.ts);
-    log.append(b); prev=m;
+    const c=shadeOf(mine?me.shade:latest[m.code]);
+    if(!mine && (!prev || prev.code!==m.code)){
+      const who=document.createElement('div'), dot=document.createElement('i'); who.className='who';
+      dot.style.background=c.bg; who.append(dot,m.username); log.append(who);
+    }
+    const b=document.createElement('div');
+    b.className='bubble glass tinted'+(mine?' mine':'')+(!firstRender&&!seenMsgs.has(m.id)?' new':'');
+    b.style.setProperty('--tint',c.tint); b.style.color=c.ink;
+    b.textContent=m.text; b.title=fmtTime(m.ts);
+    log.append(b); prev=m; seenMsgs.add(m.id);
   }
+  firstRender=false;
   if(atBottom||list.length<14) log.scrollTop=log.scrollHeight;
 }
 let sending=false;
@@ -638,25 +789,30 @@ $('f-msg').addEventListener('submit',async e=>{
   e.preventDefault(); const t=$('msg').value.trim(); if(!t||sending) return;
   if(isAdminCode(t)){ $('msg').value=''; return openAdmin(); }
   sending=true;
-  try{ await api.send(me.code,me.username,t); $('msg').value=''; $('log').scrollTop=$('log').scrollHeight; }
+  const sb=document.querySelector('#f-msg .send'); sb.classList.remove('launch'); void sb.offsetWidth; sb.classList.add('launch');
+  try{ await api.send(me.code,me.username,t,me.shade); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
   catch(err){ console.error(err); toast("Message not sent. Try again."); }
   finally{ sending=false; }
 });
 
-/* ---------- countdown ---------- */
-let tick;
+$('msg').addEventListener('input',()=>$('f-msg').classList.toggle('has-text',!!$('msg').value.trim()));
+
+/* ---------- countdown: each unit ticks in when it changes ---------- */
+let tick; const units=[...document.querySelectorAll('#c-time .u')];
 function startCountdown(){
   clearInterval(tick);
   const target=new Date(COUNTDOWN_TARGET).getTime(), p=n=>String(n).padStart(2,'0');
   const draw=()=>{ let s=Math.max(0,Math.floor((target-Date.now())/1000));
-    $('c-time').textContent=`${p(Math.floor(s/86400))} : ${p(Math.floor(s%86400/3600))} : ${p(Math.floor(s%3600/60))} : ${p(s%60)}`;
+    [Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(p).forEach((v,i)=>{
+      const u=units[i]; if(u.textContent===v) return;
+      u.textContent=v; u.classList.remove('tick'); void u.offsetWidth; u.classList.add('tick'); });
     if(s===0) clearInterval(tick); };
   draw(); tick=setInterval(draw,1000);
 }
 
 /* ---------- 4. admin ---------- */
 const mk=(tag,cls,text)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;};
-const btn=(label,cls,fn)=>{const b=mk('button','a-btn sm glass live '+(cls||''),label); b.type='button'; fn&&b.addEventListener('click',fn); responsive(b); return b;};
+const btn=(label,cls,fn)=>{const b=mk('button','a-btn sm glass live '+(cls||''),label); b.type='button'; fn&&b.addEventListener('click',fn); return b;};
 // destructive buttons ask "Sure?" on the first tap (no confirm() popup; it can be blocked inside an iframe)
 const twoStep=(b,fn)=>{ const label=b.textContent; let armed=false,t;
   b.addEventListener('click',async()=>{
@@ -667,7 +823,8 @@ const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again
 let adminUnsubs=[];
 function openAdmin(){
   store.set('playlist-admin','1'); // this browser now gets the admin shortcut in the chat
-  go('s-admin'); if(adminOn) return;
+  go('s-admin'); setTimeout(()=>document.querySelectorAll('.tabs,.seg').forEach(moveInd),60);
+  if(adminOn) return;
   adminOn=true; syncScreenTab(true);
   adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
 }
@@ -678,7 +835,15 @@ $('a-exit').addEventListener('click',()=>{
 });
 
 const tabs=[...document.querySelectorAll('.tabs button')];
-function pickTab(t){ tabs.forEach(x=>{const on=x===t; x.setAttribute('aria-selected',on); $(x.dataset.tab).hidden=!on;}); store.set('playlist-admin-tab',t.dataset.tab); }
+// slide the selection pill under the selected tab / filter
+function moveInd(box){
+  const ind=box.querySelector('.ind'), sel=box.querySelector('[aria-selected=true],[aria-checked=true]');
+  if(!ind||!sel||!sel.offsetWidth) return;
+  ind.style.width=sel.offsetWidth+'px'; ind.style.transform=`translateX(${sel.offsetLeft}px)`;
+}
+addEventListener('resize',()=>document.querySelectorAll('.tabs,.seg').forEach(moveInd));
+function pickTab(t){ tabs.forEach(x=>{const on=x===t; x.setAttribute('aria-selected',on); $(x.dataset.tab).hidden=!on;}); store.set('playlist-admin-tab',t.dataset.tab);
+  moveInd(t.parentElement); document.querySelectorAll('.seg').forEach(moveInd); }
 tabs.forEach(t=>t.addEventListener('click',()=>pickTab(t)));
 pickTab(tabs.find(t=>t.dataset.tab===store.get('playlist-admin-tab'))||tabs[0]);
 
@@ -725,7 +890,7 @@ $('f-newcode').addEventListener('submit',async e=>{
 let codeFilter='all', codeList=[];
 function pickFilter(f){
   codeFilter=f;
-  document.querySelectorAll('#a-filter button').forEach(b=>b.setAttribute('aria-checked',b.dataset.f===f));
+  document.querySelectorAll('#a-filter button').forEach(b=>b.setAttribute('aria-checked',b.dataset.f===f)); moveInd($('a-filter'));
   renderCodes(codeList);
 }
 document.querySelectorAll('#a-filter button').forEach(b=>b.addEventListener('click',()=>pickFilter(b.dataset.f)));
@@ -761,14 +926,21 @@ function codeRow(code){
   return { el, update(c){
     cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
     el.classList.toggle('free',!cur); el.classList.toggle('fresh',fresh_.has(code));
-    when.replaceChildren(mk('span','dot'), cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet');
+    const dot=mk('span','dot'); if(cur) dot.style.background=shadeOf(c.shade).bg;
+    when.replaceChildren(dot, cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet');
     reset.disabled=!cur; dirty(); } };
+}
+function countTo(el,to){ // numbers roll to their new value
+  const from=+el.textContent||0; if(from===to) return;
+  const t0=performance.now(), step=t=>{ const k=Math.min(1,(t-t0)/500), e=1-Math.pow(1-k,3);
+    el.textContent=Math.round(from+(to-from)*e); if(k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
 }
 function renderCodes(list){
   codeList=list;
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
-  $('st-total').textContent=list.length; $('st-claimed').textContent=claimed; $('st-free').textContent=list.length-claimed;
+  countTo($('st-total'),list.length); countTo($('st-claimed'),claimed); countTo($('st-free'),list.length-claimed);
   const shown=list.filter(c=>codeFilter==='all' || (codeFilter==='claimed')===!!c.username).length;
   const empty=$('a-codes-empty'); empty.hidden=shown>0;
   empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
@@ -784,6 +956,10 @@ function renderCodes(list){
 
 /* messages tab */
 let adminMsgs=[];
+twoStep($('a-clearall'),async()=>{
+  try{ const n=await api.clearMessages(); toast(`Cleared ${n} message${n===1?'':'s'}.`); }
+  catch(err){ fail('clear the messages')(err); }
+});
 setInterval(()=>adminOn&&renderAdminMsgs(adminMsgs),60e3);
 function renderAdminMsgs(list){
   adminMsgs=list; const box=$('a-msgs'), cutoff=Date.now()-TTL;
@@ -792,7 +968,8 @@ function renderAdminMsgs(list){
   box.replaceChildren();
   for(const m of list){
     const old=m.ts<=cutoff, row=mk('div','amsg glass card'+(old?' old':'')), meta=mk('div','amsg-meta');
-    meta.append(mk('b',null,m.username), mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
+    const d=mk('span','dot'); d.style.background=shadeOf(m.shade).bg;
+    meta.append(d, mk('b',null,m.username), mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
     if(old) meta.append(mk('span','tag','hidden from users'));
     meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).catch(fail('delete the message'))));
     row.append(meta, mk('div','amsg-text',m.text)); box.append(row);
@@ -803,7 +980,7 @@ function renderAdminMsgs(list){
 const saved=store.get('playlist-code');
 if(saved){ api.checkCode(saved).then(r=>{
   if(!r.valid){ store.del('playlist-code'); return; }
-  me={code:saved,username:r.username};
+  setMe(saved,r.username,r.shade);
   if(r.username) openChat(); else go('s-user');
 }).catch(()=>{}); }
 </script>

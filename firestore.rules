@@ -5,6 +5,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function codePath(c) { return /databases/$(database)/documents/codes/$(c); }
+    // profile colour: 0 = greenish white … 100 = vibrant green
+    function okShade(d) { return !('shade' in d) || (d.shade is number && d.shade >= 0 && d.shade <= 100); }
 
     match /codes/{code} {
       allow get, list: if true;
@@ -13,7 +15,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['username'])
         && request.resource.data.username == null;
       // claim / rename (the matching usernames doc must be written in the same transaction) or reset (username null)
-      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt'])
+      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade'])
+        && okShade(request.resource.data)
         && (request.resource.data.username == null
           || (request.resource.data.username is string
             && request.resource.data.username.matches('^[^/]{2,20}$')
@@ -32,7 +35,8 @@ service cloud.firestore {
 
     match /messages/{id} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts'])
+      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts','shade'])
+        && okShade(request.resource.data)
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500
         && request.resource.data.ts == request.time
