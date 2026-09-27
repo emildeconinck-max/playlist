@@ -333,6 +333,16 @@ body[data-screen=s-admin] .overlay{opacity:0}
 /* admin posting in the chat */
 .who .admin-tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.55);padding:0 6px;border-radius:999px;line-height:15px}
 #me-pop .field{height:42px;padding:0 16px}
+/* screen-text layers (up to 3) */
+.layers{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.layer{height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.45);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.14);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background .2s,color .2s}
+.layer[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.12)}
+.layer.add{color:#1E7A3A}
+.layer.rm{color:#D70015;margin-left:auto}
+.stage .ov-text.sel{outline:1px dashed rgba(255,255,255,.95);outline-offset:3px}
+/* account search */
+.a-search{flex:none;height:42px;width:100%}
+.a-search input{font-size:16px}
 /* admin history: private messages */
 .hist .bubble.pm{outline:1.5px dashed rgba(0,0,0,.28);outline-offset:2px}
 .hist .bubble.pm.sent{align-self:flex-end}
@@ -458,7 +468,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
 </head>
 <body data-screen="s-code">
 <div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i></div>
-<div class="overlay" role="status" aria-live="polite"><div class="ov-text" id="ov-text" hidden></div></div>
+<div class="overlay" id="overlay" role="status" aria-live="polite"></div>
 
 <!-- 1. CODE -->
 <section class="screen enter" id="s-code" aria-label="Enter code">
@@ -543,6 +553,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
       </div>
       <div class="a-panel" id="t-screen" role="tabpanel">
         <form class="glass card a-stack" id="f-screen" autocomplete="off">
+          <div class="layers" id="ed-layers" aria-label="Texts on the screen (up to 3)"></div>
           <textarea id="a-screen" rows="2" maxlength="280" placeholder="Type the text for everyone's screen" aria-label="Screen text"></textarea>
           <div class="ed-top">
             <span class="a-muted">Drag to move · corner to scale</span>
@@ -554,7 +565,6 @@ body[data-screen=s-admin] .overlay{opacity:0}
             </div>
           </div>
           <div class="stage" id="stage" aria-label="Preview of everyone's screen">
-            <div class="ov-text" id="ed-text"></div>
             <div class="mock" id="mock" aria-hidden="true"></div>
             <span class="ed-handle" id="ed-handle" title="Drag to scale"></span>
           </div>
@@ -611,6 +621,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
           </div>
           <button class="a-btn sm glass live" type="button" id="a-copyfree">Copy free codes</button>
         </div>
+        <label class="field glass pill a-search"><input id="a-search" type="search" placeholder="Search codes or names" aria-label="Search codes or names" autocomplete="off"></label>
         <div class="a-list" id="a-codes"></div>
         <p class="a-muted a-empty" id="a-codes-empty" hidden></p>
       </div>
@@ -753,7 +764,7 @@ const FIREBASE_CONFIG = { // public web config for the "Playlist Lobby" Firebase
 const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts down to
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
 const ADMIN_ID = "_admin";                   // the account the admin posts in the chat with (can't be used as a login code)
-const ADMIN_CODE = "admin";                  // typing this in the code box logs in as admin (for this browser session only)
+const ADMIN_CODE = "admin"; // demo mode only: the real admin password lives in the database (config/admin), not in this file                  // typing this in the code box logs in as admin (for this browser session only)
 const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
 const DEFAULT_SHADE = 80;                     // profile colour for people who haven't picked one (0 = greenish white, 100 = vibrant green)
 /* =============================================== */
@@ -840,17 +851,29 @@ async function firebaseApi(cfg){
   const V="10.12.2";
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
   const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-  const db = fs.getFirestore(initializeApp(cfg));
+  const app = initializeApp(cfg), db = fs.getFirestore(app);
+  // every visitor gets an invisible anonymous login; the security rules tie it to the code they enter
+  const A = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+  const auth = A.getAuth(app);
+  await new Promise(r=>{ const u=A.onAuthStateChanged(auth,()=>{ u(); r(); }); });
+  if(!auth.currentUser) await A.signInAnonymously(auth);
+  const uid = ()=>auth.currentUser.uid;
   const msgOut = d=>{const m=d.data();return {id:d.id,...m,ts:m.ts?m.ts.toMillis():Date.now()}};
   const lost = e=>{console.error(e);toast("Connection lost. Reload the page.");};
   const codeRef = c=>fs.doc(db,"codes",c), nameRef = n=>fs.doc(db,"usernames",n.toLowerCase());
   return {
-    async checkCode(code){
-      // a code is valid only if the admin has created it
-      if(/[\/]/.test(code) || code==="." || code==="..") return {valid:false};
+    // entering a code = becoming a member of it; the rules only allow that for codes that exist
+    async joinCode(code){
+      if(!/^[A-Za-z0-9_-]{1,24}$/.test(code)) return {valid:false};
+      try{ await fs.setDoc(fs.doc(db,"members",uid()),{code,ts:fs.serverTimestamp()}); }catch{ return {valid:false}; }
       const snap = await fs.getDoc(codeRef(code));
       return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade, kind:snap.data().kind||null, tint:snap.data().tint||null} : {valid:false};
     },
+    async leave(){ await fs.deleteDoc(fs.doc(db,"members",uid())).catch(()=>{}); },
+    // the admin password is checked by the rules against config/admin (which nobody can read)
+    async adminLogin(key){ try{ await fs.setDoc(fs.doc(db,"adminSessions",uid()),{key,ts:fs.serverTimestamp()}); return true; }catch{ return false; } },
+    async adminLogout(){ await fs.deleteDoc(fs.doc(db,"adminSessions",uid())).catch(()=>{}); },
+    async adminActive(){ try{ const s=await fs.getDoc(fs.doc(db,"adminSessions",uid())); return s.exists()&&s.data().ts&&Date.now()-s.data().ts.toMillis()<12*3600e3; }catch{ return false; } },
     async claim(code,name,shade){
       const lower=name.toLowerCase();
       return fs.runTransaction(db, async tx=>{
@@ -955,7 +978,8 @@ function localApi(){
   const taken=(d,name,code)=>Object.entries(d.codes).some(([c,n])=>c!==code&&n&&n.toLowerCase()===name.toLowerCase());
   ch&&(ch.onmessage=emit); addEventListener("storage",e=>e.key===K&&emit());
   return {
-    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c],kind:d.kinds[c]||null,tint:d.tints[c]||null}:{valid:false}; },
+    async joinCode(c){ const d=load(); return (c in d.codes)&&c!==ADMIN_ID?{valid:true,username:d.codes[c],shade:d.shades[c],kind:d.kinds[c]||null,tint:d.tints[c]||null}:{valid:false}; },
+    async leave(){}, async adminLogin(k){ return k.trim().toLowerCase()===ADMIN_CODE; }, async adminLogout(){}, async adminActive(){ return true; },
     async claim(c,name,shade){ return mut(d=>{ d.shades[c]=shade; if(!(c in d.codes)) throw new Error("code");
       if(d.codes[c]) return {ok:false,existing:d.codes[c]};
       if(taken(d,name,c)) return {ok:false,taken:true};
@@ -1122,12 +1146,18 @@ new ResizeObserver(layoutChat).observe($('chat-head'));
 const WEIGHTS=[[100,'Thin'],[200,'Ultra Light'],[300,'Light'],[400,'Regular'],[500,'Medium'],[700,'Bold'],[900,'Black']];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const numOr=(v,d,a,b)=>Number.isFinite(+v)&&v!==null&&v!==''?clamp(+v,a,b):d;
-function normScreen(v){
-  if(!v) return null; if(typeof v==='string') v={text:v};
-  const text=String(v.text||''); if(!text.trim()) return null;
+const MAX_TEXTS=3;
+function normItem(v){
+  const text=String(v&&v.text||''); if(!text.trim()) return null;
   return {text, x:numOr(v.x,.5,0,1), y:numOr(v.y,.42,0,1), size:numOr(v.size,.16,.02,.8),
     weight:WEIGHTS.some(w=>w[0]===v.weight)?v.weight:700,
     tint:/^#[0-9a-f]{6}$/i.test(v.tint||'')?v.tint.toUpperCase():'#FFFFFF', opacity:numOr(v.opacity,.75,.1,1)};
+}
+// the screen doc holds up to three texts ({items:[…]}); older docs held one text directly
+function normScreen(v){
+  if(!v) return []; if(typeof v==='string') v={text:v};
+  const list=Array.isArray(v.items)?v.items:[v];
+  return list.map(normItem).filter(Boolean).slice(0,MAX_TEXTS);
 }
 function drawText(el,c,W,H){
   el.textContent=c.text; el.style.left=(c.x*100)+'%'; el.style.top=(c.y*100)+'%';
@@ -1138,8 +1168,13 @@ function drawText(el,c,W,H){
   const w=el.offsetWidth, max=W*.94; // never wider than the screen: shrink to fit narrow phones
   if(w>max) el.style.fontSize=(c.size*Math.min(W,H)*max/w)+'px';
 }
-let screenCfg=null;
-function drawLive(){ const el=$('ov-text'); el.hidden=!screenCfg; if(screenCfg) drawText(el,screenCfg,innerWidth,innerHeight); }
+let screenCfg=[];
+function drawLive(){
+  const box=$('overlay');
+  while(box.children.length<screenCfg.length) box.append(mk('div','ov-text'));
+  while(box.children.length>screenCfg.length) box.lastChild.remove();
+  screenCfg.forEach((c,i)=>drawText(box.children[i],c,innerWidth,innerHeight));
+}
 addEventListener('resize',()=>{ drawLive(); drawEditor&&drawEditor(); });
 
 /* on-screen keyboard (iOS keeps fixed bars behind it): lift the message bar above it */
@@ -1152,34 +1187,39 @@ if(window.visualViewport){
   };
   vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit);
 }
-api.watchStyles(o=>{
+// styles and likes are only readable while logged in (code or admin), so they're watched per login
+let socialUnsubs=[];
+function startSocial(){ if(socialUnsubs.length) return; socialUnsubs=[api.watchStyles(onStyles),api.watchLikes(onLikes)]; }
+function stopSocial(){ socialUnsubs.forEach(u=>u&&u()); socialUnsubs=[]; }
+function onStyles(o){
   styles=o||{};
   applyMyShade(me.shade);
   if(current.id==='s-user') prepUserScreen();
   if(current.id==='chat') render(lastList);
   if(adminOn){ renderCodes(codeList); drawMock(); }
-});
+}
 api.watchScreen(v=>{
   const c=normScreen(v); if(JSON.stringify(c)===JSON.stringify(screenCfg)) return;
-  const changedText=!screenCfg||!c||c.text!==screenCfg.text;
-  screenCfg=c; drawLive();
-  if(c&&changedText){ const el=$('ov-text'); el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); }
+  const before=screenCfg.map(x=>x.text); screenCfg=c; drawLive();
+  c.forEach((x,i)=>{ if(before[i]!==x.text){ const el=$('overlay').children[i]; el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); } });
   syncScreenTab();
 });
-const isAdminCode=v=>v.trim().toLowerCase()===ADMIN_CODE;
+const isAdminCode=v=>v.trim().toLowerCase()===ADMIN_CODE; // only used to keep "admin" from being made into a code
 
 /* ---------- 1. code ---------- */
 $('f-code').addEventListener('submit',async e=>{
   e.preventDefault();
   const code=$('code').value.trim(); const note=$('n-code');
   if(!code) return shake($('f-code'));
-  if(isAdminCode(code)){ $('code').value=''; note.textContent=''; return openAdmin(); }
-  if(code.toLowerCase()===ADMIN_ID){ note.className='note err'; note.textContent="That code doesn't work."; return shake($('f-code')); }
-  session.del('playlist-admin'); // signing in with a code ends any admin session
   note.className='note'; note.textContent='Checking…';
   try{
-    const r=await api.checkCode(code);
-    if(!r.valid){ note.className='note err'; note.textContent="That code doesn't work."; shake($('f-code')); $('code').select(); return; }
+    const r=await api.joinCode(code);
+    if(!r.valid){
+      // not a code: maybe it's the admin password (checked by the database, not by this page)
+      if(await api.adminLogin(code)){ $('code').value=''; note.textContent=''; return openAdmin(); }
+      note.className='note err'; note.textContent="That code doesn't work."; shake($('f-code')); $('code').select(); return;
+    }
+    session.del('playlist-admin'); api.adminLogout(); // a code login ends any admin session
     setMe(code,r.username,r.shade,r.kind); store.set('playlist-code',code); note.textContent='';
     if(r.username) openChat();
     else { $('shade-user').value=me.shade; go('s-user'); setTimeout(()=>$('uname').focus(),360); }
@@ -1219,6 +1259,7 @@ function openChat(){
   go('chat'); startCountdown(); applyMyShade(me.shade);
   const asAdmin=me.kind==='admin'; $('me-color').hidden=me.hasShade&&!asAdmin; $('to-admin').hidden=!asAdmin;
   $('me-color').title=asAdmin?'Your name and color':'Pick your color';
+  startSocial(); countLikes();
   if(!unwatch) unwatch=api.watch(render); else render(lastList); // re-render so "mine" matches the account that just logged in
   if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
   watchMyDMs();
@@ -1303,14 +1344,17 @@ $('f-msg').addEventListener('submit',async e=>{
 $('msg').addEventListener('input',()=>$('f-msg').classList.toggle('has-text',!!$('msg').value.trim()));
 
 /* ---------- likes ---------- */
-let likeCount={}, myLikes=new Set(), pmTo=null; // pmTo: whose bubble was tapped (set before the like watcher can fire)
-api.watchLikes(list=>{
+let likeCount={}, myLikes=new Set(), pmTo=null, likesRaw=[]; // pmTo: whose bubble was tapped
+function countLikes(){
   likeCount={}; myLikes=new Set();
-  for(const l of list){ likeCount[l.to]=(likeCount[l.to]||0)+1; if(me.code&&l.from===me.code) myLikes.add(l.to); }
+  for(const l of likesRaw){ likeCount[l.to]=(likeCount[l.to]||0)+1; if(me.code&&l.from===me.code) myLikes.add(l.to); }
+}
+function onLikes(list){
+  likesRaw=list; countLikes();
   if(current.id==='chat') render(lastList);
   if(adminOn) renderCodes(codeList);
   if(pmTo) syncLike();
-});
+}
 
 /* ---------- tap someone else's bubble: like them, or send a private message ---------- */
 $('log').addEventListener('click',e=>{
@@ -1385,7 +1429,7 @@ function startCountdown(){
 }
 
 /* ---------- 4. admin ---------- */
-const mk=(tag,cls,text)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;};
+function mk(tag,cls,text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 const btn=(label,cls,fn)=>{const b=mk('button','a-btn sm glass live '+(cls||''),label); b.type='button'; fn&&b.addEventListener('click',fn); return b;};
 // destructive buttons ask "Sure?" on the first tap (no confirm() popup; it can be blocked inside an iframe)
 // every delete is double-checked in a dialog (not confirm(): that can be blocked inside an iframe)
@@ -1411,11 +1455,14 @@ const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again
 let adminUnsubs=[];
 // admin is a separate login: it signs out the code account on this browser and lasts for this browser session
 function logOutUser(){
+  // stop listening first: once the membership is gone the database refuses these reads
   unwatchMe&&unwatchMe(); unwatchMe=null; dmUnsub&&dmUnsub(); dmUnsub=null; closePM();
+  unwatch&&unwatch(); unwatch=null; lastList=[]; seenMsgs.clear(); firstRender=true; stopSocial();
+  if(me.code&&me.kind!=='admin') api.leave();
   store.del('playlist-code'); setMe(null,null); resetUserStep();
 }
 function openAdmin(){
-  logOutUser(); session.set('playlist-admin','1');
+  logOutUser(); session.set('playlist-admin','1'); startSocial();
   go('s-admin'); setTimeout(()=>document.querySelectorAll('.tabs,.seg').forEach(moveInd),60);
   if(adminOn) return;
   adminOn=true; $('a-who').textContent=''; syncScreenTab(true);
@@ -1425,7 +1472,7 @@ function adminLogout(){
   closeHistory(); closeRare();
   adminOn=false; adminUnsubs.forEach(u=>u&&u()); adminUnsubs=[];
   codeRows.clear(); $('a-codes').replaceChildren(); $('a-msgs').replaceChildren();
-  logOutUser(); session.del('playlist-admin'); $('code').value='';
+  logOutUser(); stopSocial(); session.del('playlist-admin'); api.adminLogout(); $('code').value='';
   go('s-code'); toast('Logged out of admin.');
 }
 $('a-exit').addEventListener('click',adminLogout);
@@ -1450,21 +1497,41 @@ function pickTab(t){ tabs.forEach(x=>{const on=x===t; x.setAttribute('aria-selec
 tabs.forEach(t=>t.addEventListener('click',()=>pickTab(t)));
 pickTab(tabs.find(t=>t.dataset.tab===store.get('playlist-admin-tab'))||tabs[0]);
 
-/* screen tab: a small editor. The preview uses the same drawing as the live screen. */
-const ed={text:'',x:.5,y:.42,size:.16,weight:700,tint:'#FFFFFF',opacity:.75};
-const stage=$('stage'), edText=$('ed-text'), handle=$('ed-handle');
+/* screen tab: a small editor for up to three texts. The preview uses the same drawing as the live screen. */
+const blankItem=i=>({text:'',x:.5,y:[.42,.24,.62][i]??.5,size:.16,weight:700,tint:'#FFFFFF',opacity:.75});
+let edItems=[blankItem(0)], active=0;
+const cur=()=>edItems[active];
+const stage=$('stage'), handle=$('ed-handle');
+const edEls=()=>[...stage.querySelectorAll(':scope > .ov-text')];
+function drawLayers(){
+  const box=$('ed-layers'); box.replaceChildren();
+  edItems.forEach((it,i)=>{
+    const b=mk('button','layer',it.text.trim()?it.text.trim().split('\n')[0].slice(0,18):`Text ${i+1}`); b.type='button';
+    b.setAttribute('aria-pressed',i===active); b.addEventListener('click',()=>{ active=i; $('a-screen').value=cur().text; drawEditor(); });
+    box.append(b);
+  });
+  if(edItems.length<MAX_TEXTS){ const a=mk('button','layer add','+ Add text'); a.type='button';
+    a.addEventListener('click',()=>{ edItems.push(blankItem(edItems.length)); active=edItems.length-1; $('a-screen').value=''; drawEditor(); $('a-screen').focus(); }); box.append(a); }
+  if(edItems.length>1){ const r=mk('button','layer rm','Remove'); r.type='button'; r.title='Remove this text from the editor';
+    r.addEventListener('click',()=>{ edItems.splice(active,1); active=Math.max(0,active-1); $('a-screen').value=cur().text; drawEditor(); }); box.append(r); }
+}
 function drawEditor(){
   if(!adminOn) return;
   const r=stage.getBoundingClientRect(); if(!r.width) return;
-  drawText(edText,{...ed,text:ed.text||'Your text'},r.width,r.height);
-  edText.classList.toggle('ph',!ed.text);
-  const t=edText.getBoundingClientRect(); // corner handle sits on the text's bottom-right corner
+  let els=edEls();
+  while(els.length<edItems.length){ const el=mk('div','ov-text'); el.addEventListener('pointerdown',startMove); stage.insertBefore(el,$('mock')); els=edEls(); }
+  while(els.length>edItems.length){ els.pop().remove(); }
+  edItems.forEach((it,i)=>{ const el=els[i]; el.dataset.i=i;
+    drawText(el,{...it,text:it.text||`Text ${i+1}`},r.width,r.height); el.classList.toggle('ph',!it.text); el.classList.toggle('sel',i===active&&edItems.length>1); });
+  const t=els[active].getBoundingClientRect(); // corner handle sits on the selected text's bottom-right corner
   handle.style.left=clamp(t.right-r.left,11,r.width-11)+'px'; handle.style.top=clamp(t.bottom-r.top,11,r.height-11)+'px';
+  const ed=cur();
   $('ed-size').value=ed.size*100; $('ed-size-v').textContent=Math.round(ed.size*100)+'%';
   const wi=WEIGHTS.findIndex(w=>w[0]===ed.weight); $('ed-weight').value=wi; $('ed-weight-v').textContent=WEIGHTS[wi][1];
   $('ed-op').value=Math.round(ed.opacity*100); $('ed-op-v').textContent=Math.round(ed.opacity*100)+'%';
   document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===ed.tint));
   $('ed-tint').value=ed.tint.toLowerCase();
+  drawLayers();
 }
 let mockOn=true;
 function drawMock(){
@@ -1489,55 +1556,58 @@ $('ed-mock').addEventListener('click',e=>{
 });
 function syncScreenTab(fill){
   if(!adminOn) return;
-  $('a-now').textContent = screenCfg ? 'Live on every screen' : 'Nothing is showing';
-  $('a-clear').disabled=!screenCfg;
-  if(fill){ Object.assign(ed,screenCfg||{text:''}); $('a-screen').value=ed.text; }
+  $('a-now').textContent = screenCfg.length ? `${screenCfg.length} text${screenCfg.length===1?'':'s'} live on every screen` : 'Nothing is showing';
+  $('a-clear').disabled=!screenCfg.length;
+  if(fill){ edItems=screenCfg.length?screenCfg.map(x=>({...x})):[blankItem(0)]; active=0; $('a-screen').value=cur().text; }
   drawMock(); requestAnimationFrame(drawEditor);
 }
-$('a-screen').addEventListener('input',e=>{ ed.text=e.target.value; drawEditor(); });
-$('ed-size').addEventListener('input',e=>{ ed.size=+e.target.value/100; drawEditor(); });
-$('ed-weight').addEventListener('input',e=>{ ed.weight=WEIGHTS[+e.target.value][0]; drawEditor(); });
-$('ed-op').addEventListener('input',e=>{ ed.opacity=+e.target.value/100; drawEditor(); });
-document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ ed.tint=b.dataset.c; drawEditor(); }));
-$('ed-tint').addEventListener('input',e=>{ ed.tint=e.target.value.toUpperCase(); drawEditor(); });
-$('ed-center').addEventListener('click',()=>{ ed.x=.5; ed.y=.5; drawEditor(); });
+$('a-screen').addEventListener('input',e=>{ cur().text=e.target.value; drawEditor(); });
+$('ed-size').addEventListener('input',e=>{ cur().size=+e.target.value/100; drawEditor(); });
+$('ed-weight').addEventListener('input',e=>{ cur().weight=WEIGHTS[+e.target.value][0]; drawEditor(); });
+$('ed-op').addEventListener('input',e=>{ cur().opacity=+e.target.value/100; drawEditor(); });
+document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ cur().tint=b.dataset.c; drawEditor(); }));
+$('ed-tint').addEventListener('input',e=>{ cur().tint=e.target.value.toUpperCase(); drawEditor(); });
+$('ed-center').addEventListener('click',()=>{ cur().x=.5; cur().y=.5; drawEditor(); });
 // preview as a phone or a computer screen
 document.querySelectorAll('#ed-view button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('#ed-view button').forEach(x=>x.setAttribute('aria-checked',x===b));
   stage.classList.toggle('phone',b.dataset.v==='phone'); moveInd($('ed-view')); drawEditor();
 }));
 if(innerWidth<600) document.querySelector('#ed-view [data-v=phone]').click();
-// drag the text to move it (snaps to the vertical centre line), drag the corner handle or scroll to scale it
+// drag a text to select and move it (snaps to the vertical centre line); drag the corner handle or scroll to scale it
 let drag=null;
-edText.addEventListener('pointerdown',e=>{
-  e.preventDefault(); edText.setPointerCapture(e.pointerId); edText.classList.add('drag');
-  drag={mode:'move',sx:e.clientX,sy:e.clientY,x:ed.x,y:ed.y};
-});
+function startMove(e){
+  const el=e.currentTarget, i=+el.dataset.i; e.preventDefault();
+  if(active!==i){ active=i; $('a-screen').value=cur().text; drawEditor(); }
+  try{ el.setPointerCapture(e.pointerId); }catch{} el.classList.add('drag');
+  drag={mode:'move',el,sx:e.clientX,sy:e.clientY,x:cur().x,y:cur().y};
+}
 handle.addEventListener('pointerdown',e=>{
-  e.preventDefault(); e.stopPropagation(); handle.setPointerCapture(e.pointerId);
-  const t=edText.getBoundingClientRect(), cx=t.left+t.width/2, cy=t.top+t.height/2;
-  drag={mode:'scale',cx,cy,d:Math.hypot(e.clientX-cx,e.clientY-cy)||1,size:ed.size};
+  e.preventDefault(); e.stopPropagation(); try{ handle.setPointerCapture(e.pointerId); }catch{}
+  const t=edEls()[active].getBoundingClientRect(), cx=t.left+t.width/2, cy=t.top+t.height/2;
+  drag={mode:'scale',el:handle,cx,cy,d:Math.hypot(e.clientX-cx,e.clientY-cy)||1,size:cur().size};
 });
-const onMove=e=>{
+stage.addEventListener('pointermove',e=>{
   if(!drag) return; const r=stage.getBoundingClientRect();
   if(drag.mode==='move'){
     let x=clamp(drag.x+(e.clientX-drag.sx)/r.width,0,1), y=clamp(drag.y+(e.clientY-drag.sy)/r.height,0,1);
     const snap=Math.abs(x-.5)<.02; if(snap) x=.5; stage.classList.toggle('snapx',snap);
-    ed.x=x; ed.y=y;
-  } else ed.size=clamp(drag.size*Math.hypot(e.clientX-drag.cx,e.clientY-drag.cy)/drag.d,.03,.6);
+    cur().x=x; cur().y=y;
+  } else cur().size=clamp(drag.size*Math.hypot(e.clientX-drag.cx,e.clientY-drag.cy)/drag.d,.03,.6);
   drawEditor();
-};
-const onUp=()=>{ drag=null; edText.classList.remove('drag'); stage.classList.remove('snapx'); };
-[edText,handle].forEach(el=>{ el.addEventListener('pointermove',onMove); el.addEventListener('pointerup',onUp); el.addEventListener('pointercancel',onUp); });
-stage.addEventListener('wheel',e=>{ e.preventDefault(); ed.size=clamp(ed.size*(1-e.deltaY*.0015),.03,.6); drawEditor(); },{passive:false});
+});
+const onUp=()=>{ if(drag&&drag.el) drag.el.classList.remove('drag'); drag=null; stage.classList.remove('snapx'); };
+stage.addEventListener('pointerup',onUp); stage.addEventListener('pointercancel',onUp);
+stage.addEventListener('wheel',e=>{ e.preventDefault(); cur().size=clamp(cur().size*(1-e.deltaY*.0015),.03,.6); drawEditor(); },{passive:false});
 new ResizeObserver(()=>drawEditor()).observe(stage);
 $('f-screen').addEventListener('submit',e=>{
-  e.preventDefault(); if(!ed.text.trim()) return shake($('f-screen'));
+  e.preventDefault();
   const r4=v=>Math.round(v*1e4)/1e4;
-  const cfg={text:ed.text,x:r4(ed.x),y:r4(ed.y),size:r4(ed.size),weight:ed.weight,tint:ed.tint,opacity:r4(ed.opacity)};
-  api.setScreen(cfg).then(()=>toast('Published on every screen.'),fail('publish'));
+  const items=edItems.filter(it=>it.text.trim()).map(it=>({text:it.text,x:r4(it.x),y:r4(it.y),size:r4(it.size),weight:it.weight,tint:it.tint,opacity:r4(it.opacity)}));
+  if(!items.length) return shake($('f-screen'));
+  api.setScreen({items}).then(()=>toast(`Published ${items.length} text${items.length===1?'':'s'} on every screen.`),fail('publish'));
 });
-$('a-clear').addEventListener('click',()=>api.setScreen({text:''}).then(()=>toast('Screen cleared.'),fail('clear')));
+$('a-clear').addEventListener('click',()=>api.setScreen({items:[]}).then(()=>toast('Screen cleared.'),fail('clear')));
 
 /* accounts tab */
 const randomCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return [...crypto.getRandomValues(new Uint32Array(8))].map(x=>A[x%A.length]).join('');};
@@ -1565,7 +1635,9 @@ $('f-newcode').addEventListener('submit',async e=>{
   try{ const ok=await api.createCode(c); toast(ok?`Code ${c} created.`:`Code ${c} already exists.`); if(ok){ $('a-newcode').value=''; markFresh([c]); } }
   catch(err){ fail('create the code')(err); }
 });
-let codeFilter='all', codeList=[];
+let codeFilter='all', codeList=[], codeQuery='';
+$('a-search').addEventListener('input',e=>{ codeQuery=e.target.value.trim().toLowerCase(); renderCodes(codeList); });
+const matchesQuery=c=>!codeQuery||c.code.toLowerCase().includes(codeQuery)||(c.username||'').toLowerCase().includes(codeQuery);
 function pickFilter(f){
   codeFilter=f;
   document.querySelectorAll('#a-filter button').forEach(b=>b.setAttribute('aria-checked',b.dataset.f===f)); moveInd($('a-filter'));
@@ -1628,14 +1700,15 @@ function renderCodes(all){
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
   countTo($('st-total'),list.length); countTo($('st-claimed'),claimed); countTo($('st-free'),list.length-claimed);
-  const shown=list.filter(c=>codeFilter==='all' || (codeFilter==='claimed')===!!c.username).length;
+  const visible=c=>(codeFilter==='all' || (codeFilter==='claimed')===!!c.username) && matchesQuery(c);
+  const shown=list.filter(visible).length;
   const empty=$('a-codes-empty'); empty.hidden=shown>0;
-  empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
+  empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeQuery ? `Nothing matches “${codeQuery}”.` : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
   list.forEach((c,i)=>{
     seen.add(c.code); let r=codeRows.get(c.code);
     if(!r){ r=codeRow(c.code); codeRows.set(c.code,r); }
     r.update(c);
-    r.el.hidden = !(codeFilter==='all' || (codeFilter==='claimed')===!!c.username);
+    r.el.hidden = !visible(c);
     if(box.children[i]!==r.el) box.insertBefore(r.el,box.children[i]||null); // only move rows that are out of place (keeps focus while typing)
   });
   for(const [k,r] of codeRows) if(!seen.has(k)){ r.el.remove(); codeRows.delete(k); }
@@ -1810,12 +1883,16 @@ function renderAdminMsgs(list){
 
 /* ---------- resume session ---------- */
 const saved=store.get('playlist-code');
-if(session.get('playlist-admin')==='1') openAdmin();
-else if(saved){ api.checkCode(saved).then(r=>{
-  if(!r.valid){ store.del('playlist-code'); return; }
-  setMe(saved,r.username,r.shade,r.kind);
-  if(r.username) openChat(); else go('s-user');
-}).catch(()=>{}); }
+function resumeCode(){
+  if(!saved) return;
+  api.joinCode(saved).then(r=>{
+    if(!r.valid){ store.del('playlist-code'); return; }
+    setMe(saved,r.username,r.shade,r.kind);
+    if(r.username) openChat(); else go('s-user');
+  }).catch(()=>{});
+}
+if(session.get('playlist-admin')==='1') api.adminActive().then(ok=>{ if(ok) openAdmin(); else { session.del('playlist-admin'); resumeCode(); } });
+else resumeCode();
 </script>
 </body>
 </html>
