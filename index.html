@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Playlist</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --ground:#D9D9D9;
@@ -14,7 +11,7 @@
   --muted:#6E6E73;
   --placeholder:#9A9A9F;
   --green:#34C759;
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro",Inter,"Segoe UI",system-ui,sans-serif;
+  --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -97,10 +94,17 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 /* chat */
 #chat{justify-content:flex-start;padding:0}
 /* the conversation scrolls underneath the glass countdown and message bar, like iOS */
-.count{position:absolute;top:max(28px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3;height:46px;padding:0 20px;display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.count b{font-weight:500}
+.count{position:absolute;top:max(28px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3;height:46px;padding:0 22px;display:flex;align-items:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.count b{font-weight:700;font-size:19px;letter-spacing:.01em}
+/* subtle log-out × under the countdown */
+.logout{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 52px);left:50%;transform:translateX(-50%);z-index:3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--muted);opacity:.7;transition:opacity .2s,background .2s}
+.logout:hover,.logout:focus-visible{opacity:1;background:rgba(255,255,255,.45)}
+.logout svg{width:12px;height:12px}
+/* admin shortcut, only on browsers that have opened the admin panel */
+.to-admin{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 5px);left:max(16px,calc(50% - 201px));z-index:3;width:36px;height:36px}
+.to-admin svg{width:17px;height:17px}
 #chat .bar{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:3;width:min(402px,calc(100% - 32px))}
-.log{position:absolute;inset:0;margin:0 auto;width:min(410px,calc(100% - 24px));overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:104px 4px 100px;scrollbar-width:none}
+.log{position:absolute;inset:0;margin:0 auto;width:min(410px,calc(100% - 24px));overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:118px 4px 100px;scrollbar-width:none}
 .log::-webkit-scrollbar{display:none}
 .log .spacer{margin-top:auto}
 .stamp{align-self:center;font-size:13px;color:var(--muted);margin:6px 0 2px}
@@ -113,7 +117,7 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 
 /* message the admin writes on everyone's screen */
 .announce{position:fixed;left:50%;top:max(28px,env(safe-area-inset-top));transform:translateX(-50%);z-index:4;width:max-content;max-width:min(402px,calc(100% - 32px));padding:12px 20px;border-radius:23px;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500}
-body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 56px)}
+body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 86px)}
 .announce.pop{animation:annpop .35s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes annpop{from{opacity:0;transform:translate(-50%,-8px) scale(.96)}}
 
@@ -142,12 +146,36 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 5
 .a-row .a-muted{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .a-wide{width:100%}
 .a-list{display:flex;flex-direction:column;gap:8px}
-.acct{display:flex;flex-direction:column;gap:8px}
-.acct-top,.acct-bot{display:flex;align-items:center;gap:8px}
-.acct code{font:600 14px/20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(0,0,0,.06);padding:4px 10px;border-radius:8px;flex:none}
-.acct input{flex:1;height:36px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
-.acct input::placeholder{color:var(--placeholder)}
-.acct-bot .a-muted{flex:1;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:26px;line-height:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;line-height:16px;color:var(--muted)}
+.gen-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gen-label{font-weight:500}
+.stepper{display:flex;align-items:center;height:36px;border-radius:999px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.stepper button{width:34px;height:36px;font-size:20px;line-height:1;color:var(--ink)}
+.stepper input{width:36px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.gen-row .a-btn{margin-left:auto}
+.a-in{flex:1;min-width:140px;height:36px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.a-in::placeholder,.acct input::placeholder{color:var(--placeholder)}
+.seg{display:flex;gap:2px;padding:3px;height:36px;flex:none}
+.seg button{padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button[aria-checked=true]{background:rgba(255,255,255,.85);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.a-row .seg + .a-btn{margin-left:auto}
+.a-empty{text-align:center;padding:12px 0}
+.acct{display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap}
+.acct.glass.fresh{box-shadow:0 0 0 2px rgba(52,199,89,.55),0 8px 18px -4px rgba(0,0,0,.14)}
+.chip{font-weight:700;font-size:14px;letter-spacing:.06em;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.07);padding:7px 10px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:118px}
+.chip svg{width:13px;height:13px;opacity:.5}
+.chip:hover svg{opacity:.9}
+.acct-mid{flex:1;min-width:130px;display:flex;flex-direction:column}
+.acct-mid input{font-weight:600;height:24px;padding:0;border-radius:6px;background:none}
+.acct-mid input:focus{box-shadow:0 2px 0 -1px var(--ink)}
+.acct.free .acct-mid input{font-weight:400}
+.acct-acts{display:flex;gap:6px;flex:none}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px}
+.acct.free .dot{background:#C7C7CC}
 .amsg{display:flex;flex-direction:column;gap:6px}
 .amsg.old{opacity:.6}
 .amsg-meta{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--muted)}
@@ -199,7 +227,13 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 5
 
 <!-- 3. CHAT -->
 <section class="screen out" id="chat" aria-label="Chat" hidden>
-  <div class="count glass pill" aria-live="off"><span id="c-label">Drop in</span><b id="c-time">00 : 00 : 00 : 00</b></div>
+  <div class="count glass pill" aria-live="off"><b id="c-time">00 : 00 : 00 : 00</b></div>
+  <button class="logout" type="button" id="logout" aria-label="Log out" title="Log out">
+    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+  </button>
+  <button class="circle glass live to-admin" type="button" id="to-admin" aria-label="Admin panel" title="Admin panel" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+  </button>
   <div class="log" id="log" aria-live="polite"><div class="spacer"></div></div>
   <form class="bar" id="f-msg" autocomplete="off">
     <label class="field glass pill"><input id="msg" placeholder="Message" aria-label="Message" maxlength="500"></label>
@@ -234,15 +268,37 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 5
         </form>
       </div>
       <div class="a-panel" id="t-accounts" role="tabpanel" hidden>
-        <form class="bar a-wide" id="f-newcode" autocomplete="off">
-          <label class="field glass pill"><input id="a-newcode" placeholder="New code" aria-label="New code" maxlength="24"></label>
-          <button class="a-btn glass live" type="button" id="a-gen">Random</button>
-          <button class="circle glass live" type="submit" aria-label="Add code">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </form>
-        <p class="a-muted" id="a-count"></p>
+        <div class="stats">
+          <div class="stat glass"><b id="st-total">0</b><span>Codes</span></div>
+          <div class="stat glass"><b id="st-claimed">0</b><span>Claimed</span></div>
+          <div class="stat glass"><b id="st-free">0</b><span>Free</span></div>
+        </div>
+        <div class="glass card a-stack">
+          <form class="gen-row" id="f-gen" autocomplete="off">
+            <span class="gen-label">Generate</span>
+            <div class="stepper">
+              <button type="button" id="g-minus" aria-label="Fewer">−</button>
+              <input id="g-n" type="number" min="1" max="50" value="5" inputmode="numeric" aria-label="How many codes">
+              <button type="button" id="g-plus" aria-label="More">+</button>
+            </div>
+            <span class="gen-label">codes</span>
+            <button class="a-btn glass green live" type="submit">Generate</button>
+          </form>
+          <form class="gen-row" id="f-newcode" autocomplete="off">
+            <input class="a-in" id="a-newcode" placeholder="Or type a custom code" aria-label="Custom code" maxlength="24">
+            <button class="a-btn glass live" type="submit">Add</button>
+          </form>
+        </div>
+        <div class="a-row">
+          <div class="seg glass pill" id="a-filter" role="radiogroup" aria-label="Show">
+            <button type="button" data-f="all" aria-checked="true" role="radio">All</button>
+            <button type="button" data-f="claimed" aria-checked="false" role="radio">Claimed</button>
+            <button type="button" data-f="free" aria-checked="false" role="radio">Free</button>
+          </div>
+          <button class="a-btn sm glass live" type="button" id="a-copyfree">Copy free codes</button>
+        </div>
         <div class="a-list" id="a-codes"></div>
+        <p class="a-muted a-empty" id="a-codes-empty" hidden></p>
       </div>
       <div class="a-panel" id="t-msgs" role="tabpanel" hidden>
         <p class="a-muted" id="a-mcount"></p>
@@ -266,7 +322,6 @@ const FIREBASE_CONFIG = { // public web config for the "Playlist Lobby" Firebase
   appId: "1:98113831672:web:caae55b5c34ba63688310d"
 };
 const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts down to
-const COUNTDOWN_LABEL  = "Drop in";
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
 const ADMIN_CODE = "admin";                  // typing this (code box or chat box) opens the admin panel
 const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
@@ -466,7 +521,7 @@ function placeAnnounce(){
   document.body.dataset.screen=current.id;
   const show=!!screenText && current.id!=='s-admin';
   ann.hidden=!show;
-  $('log').style.paddingTop = show&&current.id==='chat' ? (104+ann.offsetHeight+10)+'px' : '';
+  $('log').style.paddingTop = show&&current.id==='chat' ? (118+ann.offsetHeight+10)+'px' : '';
 }
 new ResizeObserver(placeAnnounce).observe(ann);
 api.watchScreen(t=>{
@@ -524,10 +579,19 @@ function resetUserStep(){
 let unwatch=null, unwatchMe=null;
 function openChat(){
   go('chat'); startCountdown();
-  if(!unwatch) unwatch=api.watch(render);
+  $('to-admin').hidden = store.get('playlist-admin')!=='1';
+  if(!unwatch) unwatch=api.watch(render); else render(lastList); // re-render so "mine" matches the account that just logged in
   if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
   setTimeout(()=>$('msg').focus(),360);
 }
+// log out: forget the code on this browser. Logging back in with the same code keeps the username.
+$('logout').addEventListener('click',()=>{
+  unwatchMe&&unwatchMe(); unwatchMe=null;
+  store.del('playlist-code'); me={code:null,username:null}; resetUserStep();
+  $('code').value=''; $('n-code').textContent='';
+  go('s-code'); setTimeout(()=>$('code').focus(),360);
+});
+$('to-admin').addEventListener('click',()=>openAdmin());
 // the admin can rename, reset or delete this browser's account while it is open
 function onMyCode(name){
   if(!me.code) return;
@@ -582,11 +646,11 @@ $('f-msg').addEventListener('submit',async e=>{
 /* ---------- countdown ---------- */
 let tick;
 function startCountdown(){
-  clearInterval(tick); $('c-label').textContent=COUNTDOWN_LABEL;
+  clearInterval(tick);
   const target=new Date(COUNTDOWN_TARGET).getTime(), p=n=>String(n).padStart(2,'0');
   const draw=()=>{ let s=Math.max(0,Math.floor((target-Date.now())/1000));
     $('c-time').textContent=`${p(Math.floor(s/86400))} : ${p(Math.floor(s%86400/3600))} : ${p(Math.floor(s%3600/60))} : ${p(s%60)}`;
-    if(s===0){ $('c-label').textContent="It's time"; clearInterval(tick);} };
+    if(s===0) clearInterval(tick); };
   draw(); tick=setInterval(draw,1000);
 }
 
@@ -602,6 +666,7 @@ const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again
 
 let adminUnsubs=[];
 function openAdmin(){
+  store.set('playlist-admin','1'); // this browser now gets the admin shortcut in the chat
   go('s-admin'); if(adminOn) return;
   adminOn=true; syncScreenTab(true);
   adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
@@ -633,17 +698,49 @@ $('a-clear').addEventListener('click',()=>api.setScreen('').then(()=>{ $('a-scre
 
 /* accounts tab */
 const randomCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return [...crypto.getRandomValues(new Uint32Array(8))].map(x=>A[x%A.length]).join('');};
-$('a-gen').addEventListener('click',()=>{ $('a-newcode').value=randomCode(); $('a-newcode').focus(); });
+async function copy(text,msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg); }
+  catch{ toast("Couldn't copy. Select the code and copy it by hand."); }
+}
+const fresh_=new Set(); // codes created in this session get a green outline
+function markFresh(codes){ codes.forEach(c=>{ fresh_.add(c); const r=codeRows.get(c); r&&r.el.classList.add('fresh'); }); setTimeout(()=>{ codes.forEach(c=>{ fresh_.delete(c); const r=codeRows.get(c); r&&r.el.classList.remove('fresh'); }); },8000); }
+const clampN=()=>{ const n=Math.min(50,Math.max(1,parseInt($('g-n').value,10)||1)); $('g-n').value=n; return n; };
+$('g-minus').addEventListener('click',()=>{ $('g-n').value=clampN()-1||1; });
+$('g-plus').addEventListener('click',()=>{ $('g-n').value=Math.min(50,clampN()+1); });
+$('g-n').addEventListener('change',clampN);
+$('f-gen').addEventListener('submit',async e=>{
+  e.preventDefault(); const n=clampN(), made=[];
+  try{
+    for(let i=0;i<n;i++){ const c=randomCode(); if(await api.createCode(c)) made.push(c); }
+    markFresh(made); pickFilter('all');
+    copy(made.join('\n'),`Created ${made.length} code${made.length===1?'':'s'} and copied ${made.length===1?'it':'them'}.`);
+  }catch(err){ if(made.length) markFresh(made); fail('create codes')(err); }
+});
 $('f-newcode').addEventListener('submit',async e=>{
   e.preventDefault(); const c=$('a-newcode').value.trim();
   if(!/^[A-Za-z0-9_-]{1,24}$/.test(c) || isAdminCode(c)){ toast('Use letters, numbers, - or _ (and not "admin").'); return shake($('f-newcode')); }
-  try{ const ok=await api.createCode(c); toast(ok?`Code ${c} created.`:`Code ${c} already exists.`); if(ok) $('a-newcode').value=''; }
+  try{ const ok=await api.createCode(c); toast(ok?`Code ${c} created.`:`Code ${c} already exists.`); if(ok){ $('a-newcode').value=''; markFresh([c]); } }
   catch(err){ fail('create the code')(err); }
+});
+let codeFilter='all', codeList=[];
+function pickFilter(f){
+  codeFilter=f;
+  document.querySelectorAll('#a-filter button').forEach(b=>b.setAttribute('aria-checked',b.dataset.f===f));
+  renderCodes(codeList);
+}
+document.querySelectorAll('#a-filter button').forEach(b=>b.addEventListener('click',()=>pickFilter(b.dataset.f)));
+$('a-copyfree').addEventListener('click',()=>{
+  const free=codeList.filter(c=>!c.username).map(c=>c.code);
+  if(!free.length) return toast('There are no free codes.');
+  copy(free.join('\n'),`Copied ${free.length} free code${free.length===1?'':'s'}.`);
 });
 const codeRows=new Map();
 function codeRow(code){
   const el=mk('div','acct glass card'), inp=mk('input'), when=mk('span','a-muted');
-  inp.placeholder='Unclaimed'; inp.maxLength=20; inp.setAttribute('aria-label',`Username for code ${code}`);
+  const chip=mk('button','chip',code); chip.type='button'; chip.title='Copy code';
+  chip.insertAdjacentHTML('beforeend','<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 3.5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h.5"/></svg>');
+  chip.addEventListener('click',()=>copy(code,`Copied ${code}.`));
+  inp.placeholder='Free · type a name to assign'; inp.maxLength=20; inp.setAttribute('aria-label',`Username for code ${code}`);
   let cur=null;
   const dirty=()=>{ save.hidden = inp.value.trim()===(cur||''); };
   const save=btn('Save','green',async()=>{
@@ -659,21 +756,27 @@ function codeRow(code){
   inp.addEventListener('input',dirty);
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(!save.hidden) save.click(); }
     if(e.key==='Escape'){ inp.value=cur||''; dirty(); inp.blur(); } });
-  const top=mk('div','acct-top'), bot=mk('div','acct-bot');
-  top.append(mk('code',null,code),inp); bot.append(when,save,reset,del); el.append(top,bot);
+  const mid=mk('div','acct-mid'), acts=mk('div','acct-acts');
+  mid.append(inp,when); acts.append(save,reset,del); el.append(chip,mid,acts);
   return { el, update(c){
     cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
-    when.textContent = cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet';
+    el.classList.toggle('free',!cur); el.classList.toggle('fresh',fresh_.has(code));
+    when.replaceChildren(mk('span','dot'), cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet');
     reset.disabled=!cur; dirty(); } };
 }
 function renderCodes(list){
+  codeList=list;
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
-  const box=$('a-codes'), seen=new Set();
-  $('a-count').textContent = list.length ? `${list.length} code${list.length===1?'':'s'} · ${list.filter(c=>c.username).length} claimed` : 'No codes yet. Add one above.';
+  const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
+  $('st-total').textContent=list.length; $('st-claimed').textContent=claimed; $('st-free').textContent=list.length-claimed;
+  const shown=list.filter(c=>codeFilter==='all' || (codeFilter==='claimed')===!!c.username).length;
+  const empty=$('a-codes-empty'); empty.hidden=shown>0;
+  empty.textContent = !list.length ? 'No codes yet. Generate some above.' : codeFilter==='claimed' ? 'No codes are claimed yet.' : 'Every code is claimed. Generate more above.';
   list.forEach((c,i)=>{
     seen.add(c.code); let r=codeRows.get(c.code);
     if(!r){ r=codeRow(c.code); codeRows.set(c.code,r); }
     r.update(c);
+    r.el.hidden = !(codeFilter==='all' || (codeFilter==='claimed')===!!c.username);
     if(box.children[i]!==r.el) box.insertBefore(r.el,box.children[i]||null); // only move rows that are out of place (keeps focus while typing)
   });
   for(const [k,r] of codeRows) if(!seen.has(k)){ r.el.remove(); codeRows.delete(k); }
