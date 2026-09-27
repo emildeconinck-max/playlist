@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Playlist</title>
 <style>
 :root{
@@ -26,8 +26,9 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body{background:var(--ground);color:var(--ink);font:17px/22px var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
-button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
 input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-width:0}
 [hidden]{display:none!important}
 
@@ -137,9 +138,10 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 .shade-range::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 55%,rgba(240,240,240,.7));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.22);transition:transform .45s var(--spring)}
 .shade-range:active::-webkit-slider-thumb,.shade-range:focus-visible::-webkit-slider-thumb{transform:scale(1.3,1.18)}
 .shade-range:active::-moz-range-thumb{transform:scale(1.3,1.18)}
-.me-color{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 5px);right:max(16px,calc(50% - 201px));z-index:3;width:36px;height:36px}
-.me-color .shade-dot{width:20px;height:20px}
-.shade-pop{position:fixed;z-index:8;top:calc(max(28px,env(safe-area-inset-top)) + 50px);right:max(16px,calc(50% - 201px));width:min(290px,calc(100% - 32px));border-radius:24px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;transform-origin:92% 0;animation:popin .45s var(--spring)}
+
+.shade-pop{position:fixed;z-index:8;top:140px;left:50%;width:min(310px,calc(100% - 32px));margin-left:calc(min(310px,calc(100% - 32px))/-2);border-radius:24px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;transform-origin:50% 0;animation:popin .45s var(--spring)}
+.pop-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pop-row .a-btn{height:38px}
 @keyframes popin{from{opacity:0;transform:scale(.6)}}
 .pop-title{margin:0;font-size:13px;color:var(--muted)}
 .pop-prev{align-self:flex-end;padding:10px 16px;border-radius:21px;background:var(--me-tint);color:var(--me-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 0 .5px rgba(0,0,0,.1);transition:background .15s,color .15s}
@@ -151,10 +153,29 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 /* chat */
 #chat{justify-content:flex-start;padding:0}
 /* the conversation scrolls underneath the glass countdown and message bar, like iOS */
-.count{position:absolute;top:max(28px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3;height:46px;padding:0 22px;display:flex;align-items:center;font-variant-numeric:tabular-nums;white-space:nowrap}
-.count b{font-weight:700;font-size:19px;letter-spacing:.01em}
-.count .u{display:inline-block;min-width:1.25em;text-align:center}
-.count .u.tick{animation:tick .5s cubic-bezier(.2,.9,.3,1.3)}
+/* chat header: the big glass clock, with small controls under it */
+.chat-head{position:absolute;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.chat-head > *{pointer-events:auto}
+.head-row{display:flex;align-items:center;gap:12px;min-height:32px}
+.mini{width:32px;height:32px}
+.mini svg{width:15px;height:15px}
+.mini .shade-dot{width:18px;height:18px}
+/* liquid-glass numerals: translucent white fill, bright rim, soft shadow, a slow sheen running through */
+.count{font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;user-select:none;-webkit-user-select:none}
+.count b{display:flex;align-items:center;font-weight:800;font-size:clamp(46px,13.5vw,88px);letter-spacing:-.02em}
+.count .u,.count .sep{
+  display:inline-block;
+  background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.78) 34%,rgba(255,255,255,.3) 50%,rgba(255,255,255,.52) 74%,rgba(255,255,255,.96) 100%);
+  background-size:100% 240%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:1.2px rgba(255,255,255,.92);
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.14)) drop-shadow(0 10px 16px rgba(0,0,0,.17));
+  animation:sheen 8s ease-in-out infinite;
+}
+.count .u{min-width:1.14em;text-align:center}
+.count .sep{padding:0 .02em;transform:translateY(-.07em)}
+.count .u.tick{animation:tick .55s cubic-bezier(.2,.9,.3,1.3),sheen 8s ease-in-out infinite}
+@keyframes sheen{50%{background-position:0 100%}}
 @keyframes tick{from{transform:translateY(-55%) scale(.9);opacity:0}}
 /* send button fills with your colour once there is something to send */
 #f-msg .send svg{stroke:currentColor;transition:transform .5s var(--spring)}
@@ -165,14 +186,14 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 #lock.locked{animation:boing .6s var(--spring)}
 @keyframes boing{30%{transform:scale(1.2,.85)}60%{transform:scale(.92,1.08)}}
 /* subtle log-out × under the countdown */
-.logout{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 52px);left:50%;transform:translateX(-50%);z-index:3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--muted);opacity:.7;transition:opacity .2s,background .2s}
+.logout{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--muted);opacity:.7;transition:opacity .2s,background .2s}
 .logout:hover,.logout:focus-visible{opacity:1;background:rgba(255,255,255,.45)}
 .logout svg{width:12px;height:12px}
 /* admin shortcut, only on browsers that have opened the admin panel */
-.to-admin{position:absolute;top:calc(max(28px,env(safe-area-inset-top)) + 5px);left:max(16px,calc(50% - 201px));z-index:3;width:36px;height:36px}
-.to-admin svg{width:17px;height:17px}
-#chat .bar{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:3;width:min(402px,calc(100% - 32px))}
-.log{position:absolute;inset:0;margin:0 auto;width:min(410px,calc(100% - 24px));overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:118px 4px 100px;scrollbar-width:none}
+
+#chat .bar{position:absolute;bottom:calc(max(28px,env(safe-area-inset-bottom)) + var(--kb,0px));left:50%;transform:translateX(-50%);z-index:3;width:min(402px,calc(100% - 32px))}
+body.kb #chat .bar{bottom:calc(10px + var(--kb,0px))}
+.log{position:absolute;inset:0;margin:0 auto;width:min(410px,calc(100% - 24px));overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:150px 4px calc(100px + var(--kb,0px));scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .log::-webkit-scrollbar{display:none}
 .log .spacer{margin-top:auto}
 .stamp{align-self:center;font-size:13px;color:var(--muted);margin:6px 0 2px}
@@ -188,10 +209,52 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 @keyframes toastin{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}}
 
 /* message the admin writes on everyone's screen */
-.announce{position:fixed;left:50%;top:max(28px,env(safe-area-inset-top));transform:translateX(-50%);z-index:4;width:max-content;max-width:min(402px,calc(100% - 32px));padding:12px 20px;border-radius:23px;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500}
-body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 86px)}
-.announce.pop{animation:annpop .35s cubic-bezier(.2,.9,.3,1.2)}
-@keyframes annpop{from{opacity:0;transform:translate(-50%,-8px) scale(.96)}}
+/* text the admin places on everyone's screen: a translucent, lighter, grainy layer that blends into the background
+   (it sits behind the glass, so the bars and bubbles blur it) */
+.overlay{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;transition:opacity .4s}
+body[data-screen=s-admin] .overlay{opacity:0}
+.ov-text{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);white-space:pre;text-align:center;line-height:.95;letter-spacing:-.02em;
+  color:transparent;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .9 0 0 0 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),linear-gradient(172deg,#fff 0%,var(--ov-tint,#fff) 50%,#fff 110%);
+  background-size:180px 180px,100% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  mix-blend-mode:screen}
+.ov-text.in{animation:ovin .8s cubic-bezier(.2,.9,.3,1.15)}
+@keyframes ovin{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}}
+
+/* screen-text editor */
+.stage{position:relative;width:100%;aspect-ratio:16/10;border-radius:16px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(60% 70% at 18% 12%,rgba(255,255,255,.95),rgba(255,255,255,0) 70%),radial-gradient(55% 60% at 88% 92%,var(--me-soft),rgba(255,255,255,0) 70%),radial-gradient(45% 50% at 55% 55%,rgba(150,150,158,.35),rgba(150,150,158,0) 70%),var(--ground);
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.15),inset 0 1px 3px rgba(0,0,0,.08)}
+.stage.phone{width:min(230px,100%);aspect-ratio:9/19.5;align-self:center}
+.stage .ov-text{cursor:grab}
+.stage .ov-text.drag{cursor:grabbing}
+.stage .ov-text.ph{opacity:.45!important}
+.stage::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed rgba(52,199,89,.8);opacity:0;transition:opacity .15s;pointer-events:none}
+.stage.snapx::after{opacity:1}
+.ed-handle{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;cursor:nwse-resize;touch-action:none;
+  background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 60%,rgba(235,235,235,.8));box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.2)}
+.ed-handle::after{content:"";position:absolute;inset:6px;border-right:2px solid rgba(0,0,0,.45);border-bottom:2px solid rgba(0,0,0,.45);border-radius:0 0 3px 0}
+.ed-row{display:flex;align-items:center;gap:10px;min-height:34px}
+.ed-lbl{width:62px;flex:none;font-size:14px;color:var(--muted)}
+.ed-val{width:78px;flex:none;text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.ed-range{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:30px;background:none;margin:0;cursor:pointer}
+.ed-range::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
+.ed-range::-moz-range-track{height:6px;border-radius:999px;background:rgba(0,0,0,.1)}
+.ed-range::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.85) 60%,rgba(240,240,240,.8));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.2);transition:transform .4s var(--spring)}
+.ed-range::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.2)}
+.ed-range:active::-webkit-slider-thumb{transform:scale(1.25,1.12)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.sw{width:28px;height:28px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25),inset 0 2px 3px rgba(255,255,255,.6),0 2px 5px rgba(0,0,0,.12);transition:transform .4s var(--spring)}
+.sw[aria-pressed=true]{transform:scale(1.15);box-shadow:0 0 0 2px #fff,0 0 0 3.5px rgba(0,0,0,.55)}
+.sw.custom{position:relative;overflow:hidden;background:conic-gradient(#ff6b6b,#ffd93d,#6bff95,#6bd5ff,#b06bff,#ff6b6b)}
+.sw.custom input{position:absolute;inset:-8px;width:44px;height:44px;opacity:0;cursor:pointer}
+.ed-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ed-top .seg{height:32px}
+.ed-top .seg button{font-size:12px;padding:0 10px}
+.a-row.wrap{flex-wrap:wrap}
+
+
 
 /* admin panel */
 #s-admin{justify-content:flex-start;overflow-y:auto;padding-top:max(28px,env(safe-area-inset-top))}
@@ -260,11 +323,31 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 .tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:999px;white-space:nowrap}
 .amsg-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .dot{transition:background .3s}
+.amsg-meta{flex-wrap:wrap}
+.acct-acts{margin-left:auto}
+#s-admin{padding-bottom:max(24px,env(safe-area-inset-bottom))}
+@media (max-width:480px){
+  .admin{gap:12px}
+  .a-head h1{font-size:24px;line-height:30px}
+  .card{padding:12px 14px}
+  .stat{padding:10px 12px}
+  .stat b{font-size:22px;line-height:26px}
+  .tabs button{font-size:14px}
+  .chip{min-width:0}
+  .acct{gap:10px}
+}
+/* touch screens: no sticky hover effects, pressing still squashes */
+@media (hover:none){
+  .live:hover:not(.pressed){transform:none}
+  .bubble:hover{transform:none}
+  .glass:hover::after{opacity:0}
+}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body data-screen="s-code">
 <div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i></div>
+<div class="overlay" role="status" aria-live="polite"><div class="ov-text" id="ov-text" hidden></div></div>
 
 <!-- 1. CODE -->
 <section class="screen enter" id="s-code" aria-label="Enter code">
@@ -300,7 +383,7 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
       <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
   </form>
-  <p class="note stagger" style="--i:1" id="n-user">You cannot change your username</p>
+  <p class="note stagger" style="--i:1" id="n-user">You cannot change your username or color</p>
   <div class="shade glass pill stagger" style="--i:2">
     <span class="shade-lbl">Your color</span>
     <input class="shade-range" id="shade-user" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
@@ -310,14 +393,15 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 
 <!-- 3. CHAT -->
 <section class="screen out" id="chat" aria-label="Chat" hidden>
-  <div class="count glass pill staggerX" style="--i:0" aria-live="off"><b id="c-time"><span class="u">00</span> : <span class="u">00</span> : <span class="u">00</span> : <span class="u">00</span></b></div>
-  <button class="logout staggerX" style="--i:1" type="button" id="logout" aria-label="Log out" title="Log out">
-    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
-  </button>
-  <button class="circle glass live to-admin" type="button" id="to-admin" aria-label="Admin panel" title="Admin panel" hidden>
-    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
-  </button>
-  <button class="circle glass live me-color" type="button" id="me-color" aria-label="Your color" title="Your color"><span class="shade-dot"></span></button>
+  <header class="chat-head staggerX" style="--i:0" id="chat-head">
+    <div class="count" role="timer" aria-label="Time left"><b id="c-time"><span class="u">00</span><span class="sep">:</span><span class="u">00</span><span class="sep">:</span><span class="u">00</span><span class="sep">:</span><span class="u">00</span></b></div>
+    <div class="head-row">
+      <button class="logout" type="button" id="logout" aria-label="Log out" title="Log out">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+      </button>
+      <button class="circle glass live mini" type="button" id="me-color" aria-label="Pick your color" title="Pick your color" hidden><span class="shade-dot"></span></button>
+    </div>
+  </header>
   <div class="log" id="log" aria-live="polite"><div class="spacer"></div></div>
   <form class="bar staggerX" style="--i:2" id="f-msg" autocomplete="off">
     <label class="field glass pill"><input id="msg" placeholder="Message" aria-label="Message" maxlength="500"></label>
@@ -333,9 +417,9 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
     <header class="a-head stagger" style="--i:0">
       <h1>Admin</h1>
       <span class="a-muted" id="a-who"></span>
-      <button class="a-btn glass live" type="button" id="a-exit">Close</button>
+      <button class="a-btn glass live" type="button" id="a-exit">Log out</button>
     </header>
-    <div class="a-body">
+    <div class="a-body" id="a-body">
       <div class="tabs glass pill stagger" style="--i:1" role="tablist">
         <span class="ind" aria-hidden="true"></span>
         <button type="button" role="tab" data-tab="t-screen">Screen</button>
@@ -344,9 +428,36 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
       </div>
       <div class="a-panel" id="t-screen" role="tabpanel">
         <form class="glass card a-stack" id="f-screen" autocomplete="off">
-          <textarea id="a-screen" rows="3" maxlength="280" placeholder="Write something on everyone's screen" aria-label="Screen message"></textarea>
-          <div class="a-row">
+          <textarea id="a-screen" rows="2" maxlength="280" placeholder="Type the text for everyone's screen" aria-label="Screen text"></textarea>
+          <div class="ed-top">
+            <span class="a-muted">Drag to move · corner to scale</span>
+            <div class="seg glass pill" id="ed-view" role="radiogroup" aria-label="Preview">
+              <span class="ind" aria-hidden="true"></span>
+              <button type="button" role="radio" data-v="phone" aria-checked="false">Phone</button>
+              <button type="button" role="radio" data-v="desktop" aria-checked="true">Desktop</button>
+            </div>
+          </div>
+          <div class="stage" id="stage" aria-label="Preview of everyone's screen">
+            <div class="ov-text" id="ed-text"></div>
+            <span class="ed-handle" id="ed-handle" title="Drag to scale"></span>
+          </div>
+          <div class="ed-row"><span class="ed-lbl">Size</span><input class="ed-range" id="ed-size" type="range" min="3" max="60" step=".5" aria-label="Text size"><span class="ed-val" id="ed-size-v"></span></div>
+          <div class="ed-row"><span class="ed-lbl">Weight</span><input class="ed-range" id="ed-weight" type="range" min="0" max="6" step="1" aria-label="Font weight"><span class="ed-val" id="ed-weight-v"></span></div>
+          <div class="ed-row"><span class="ed-lbl">Opacity</span><input class="ed-range" id="ed-op" type="range" min="15" max="100" aria-label="Opacity"><span class="ed-val" id="ed-op-v"></span></div>
+          <div class="ed-row"><span class="ed-lbl">Tint</span>
+            <div class="swatches" id="ed-tints">
+              <button type="button" class="sw" data-c="#FFFFFF" style="background:#fff" aria-label="White"></button>
+              <button type="button" class="sw" data-c="#C9F5D6" style="background:#C9F5D6" aria-label="Mint"></button>
+              <button type="button" class="sw" data-c="#34C759" style="background:#34C759" aria-label="Green"></button>
+              <button type="button" class="sw" data-c="#A8DCFF" style="background:#A8DCFF" aria-label="Sky"></button>
+              <button type="button" class="sw" data-c="#DCCBFF" style="background:#DCCBFF" aria-label="Lilac"></button>
+              <button type="button" class="sw" data-c="#FFD6B8" style="background:#FFD6B8" aria-label="Peach"></button>
+              <label class="sw custom" title="Any color"><input type="color" id="ed-tint" value="#ffffff" aria-label="Custom tint"></label>
+            </div>
+          </div>
+          <div class="a-row wrap">
             <span class="a-muted" id="a-now"></span>
+            <button class="a-btn glass live" type="button" id="ed-center">Center</button>
             <button class="a-btn glass live" type="button" id="a-clear">Clear</button>
             <button class="a-btn glass green live" type="submit">Publish</button>
           </div>
@@ -398,11 +509,13 @@ body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 8
 </section>
 
 <div class="shade-pop glass" id="shade-pop" hidden>
-  <p class="pop-title">Your color</p>
+  <p class="pop-title">Pick your color. It locks to your account.</p>
   <input class="shade-range" id="shade-chat" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
-  <div class="pop-prev">This is how you look</div>
+  <div class="pop-row">
+    <div class="pop-prev">This is you</div>
+    <button class="a-btn glass green live" type="button" id="shade-lock">Lock color</button>
+  </div>
 </div>
-<div class="announce glass" id="announce" role="status" hidden><span id="ann-text"></span></div>
 <div class="toast glass pill" id="toast" hidden></div>
 
 <script type="module">
@@ -417,7 +530,7 @@ const FIREBASE_CONFIG = { // public web config for the "Playlist Lobby" Firebase
 };
 const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts down to
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
-const ADMIN_CODE = "admin";                  // typing this (code box or chat box) opens the admin panel
+const ADMIN_CODE = "admin";                  // typing this in the code box logs in as admin (for this browser session only)
 const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
 const DEFAULT_SHADE = 80;                     // profile colour for people who haven't picked one (0 = greenish white, 100 = vibrant green)
 /* =============================================== */
@@ -426,6 +539,7 @@ const TTL = MESSAGE_TTL_HOURS*3600e3;
 const NAME_RE = /^[\p{L}\p{N}_.\- ]{2,20}$/u;
 
 const $ = id => document.getElementById(id);
+const session = { get:k=>{try{return sessionStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch{}}, del:k=>{try{sessionStorage.removeItem(k)}catch{}} };
 const store = { get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}} };
 const toast = t => { const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,3200); };
 
@@ -536,7 +650,7 @@ async function firebaseApi(cfg){
       return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut).reverse()),lost);
     },
     watchCode(code,cb){ return fs.onSnapshot(codeRef(code),s=>cb(s.exists()?(s.data().username||null):undefined),e=>console.error(e)); },
-    watchScreen(cb){ return fs.onSnapshot(fs.doc(db,"site","screen"),s=>cb(s.exists()&&s.data().text||""),e=>console.error(e)); },
+    watchScreen(cb){ return fs.onSnapshot(fs.doc(db,"site","screen"),s=>cb(s.exists()?s.data():null),e=>console.error(e)); },
 
     /* admin */
     watchAll(cb){
@@ -553,7 +667,7 @@ async function firebaseApi(cfg){
     resetCode(code){ return fs.runTransaction(db,async tx=>{
       const c=await tx.get(codeRef(code)); if(!c.exists()) return;
       const u=c.data().username; if(u) tx.delete(nameRef(u));
-      tx.update(codeRef(code),{username:null,claimedAt:null}); }); },
+      tx.update(codeRef(code),{username:null,claimedAt:null,shade:fs.deleteField()}); }); },
     deleteCode(code){ return fs.runTransaction(db,async tx=>{
       const c=await tx.get(codeRef(code)); if(!c.exists()) return;
       const u=c.data().username; if(u) tx.delete(nameRef(u));
@@ -568,7 +682,7 @@ async function firebaseApi(cfg){
       tx.update(codeRef(code),{username:name,claimedAt:c.data().claimedAt||fs.serverTimestamp()});
       return {ok:true}; }); },
     deleteMessage(id){ return fs.deleteDoc(fs.doc(db,"messages",id)); },
-    setScreen(text){ return fs.setDoc(fs.doc(db,"site","screen"),{text,ts:fs.serverTimestamp()}); },
+    setScreen(cfg){ return fs.setDoc(fs.doc(db,"site","screen"),{...cfg,ts:fs.serverTimestamp()}); },
     async clearMessages(){ // delete in batches (a batch holds at most 500 writes)
       let n=0;
       for(;;){
@@ -607,11 +721,11 @@ function localApi(){
     watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
     watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],claimedAt:null})))),
     async createCode(c){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; return true; }); },
-    async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; }); },
+    async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; delete d.shades[c]; }); },
     async deleteCode(c){ mut(d=>{ delete d.codes[c]; }); },
     async renameCode(c,name){ return mut(d=>{ if(taken(d,name,c)) return {ok:false,taken:true}; d.codes[c]=name; return {ok:true}; }); },
     async deleteMessage(id){ mut(d=>{ d.msgs=d.msgs.filter(m=>m.id!==id); }); },
-    async setScreen(text){ mut(d=>{ d.screen=text; }); }
+    async setScreen(cfg){ mut(d=>{ d.screen=cfg; }); }
   };
 }
 
@@ -627,7 +741,7 @@ function go(id){
   setTimeout(()=>{prev.hidden=true;},350);
   next.hidden=false; next.classList.remove('enter'); void next.offsetWidth; next.classList.add('enter'); // replay the staggered entrance
   requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.remove('out')));
-  current=next; placeAnnounce(); $('shade-pop').hidden=true;
+  current=next; layoutChat(); closeShadePop();
 }
 const shake=el=>{el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');};
 
@@ -644,31 +758,79 @@ function applyMyShade(v){
   const c=shadeOf(v), r=document.documentElement.style;
   r.setProperty('--me',c.bg); r.setProperty('--me-tint',c.tint); r.setProperty('--me-soft',c.soft); r.setProperty('--me-ink',c.ink);
 }
-const setMe=(code,username,shade)=>{ me={code,username,shade:Number.isFinite(shade)?shade:DEFAULT_SHADE}; applyMyShade(me.shade); };
+// hasShade: the colour is saved on the account and can no longer change
+const setMe=(code,username,shade)=>{ const has=Number.isFinite(shade); me={code,username,shade:has?shade:DEFAULT_SHADE,hasShade:has}; applyMyShade(me.shade); };
 applyMyShade(DEFAULT_SHADE);
 // username screen: pick before locking
 $('shade-user').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); });
 // chat: the colour button opens a small glass popover; it previews live and saves on release
-$('me-color').addEventListener('click',()=>{ const p=$('shade-pop'); p.hidden=!p.hidden; if(!p.hidden) $('shade-chat').value=me.shade; });
-document.addEventListener('pointerdown',e=>{ const p=$('shade-pop'); if(!p.hidden && !e.target.closest('#shade-pop,#me-color')) p.hidden=true; });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('shade-pop').hidden=true; });
-$('shade-chat').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); render(lastList); });
-$('shade-chat').addEventListener('change',e=>{ if(me.code) api.setShade(me.code,+e.target.value).catch(fail('save your color')); });
-
-/* ---------- message the admin writes on everyone's screen ---------- */
-let screenText="";
-const ann=$('announce');
-function placeAnnounce(){
-  document.body.dataset.screen=current.id;
-  const show=!!screenText && current.id!=='s-admin';
-  ann.hidden=!show;
-  $('log').style.paddingTop = show&&current.id==='chat' ? (118+ann.offsetHeight+10)+'px' : '';
+// accounts from before colours existed can pick one colour, once
+function closeShadePop(){
+  const p=$('shade-pop'); if(p.hidden) return; p.hidden=true;
+  if(!me.hasShade){ me.shade=DEFAULT_SHADE; applyMyShade(me.shade); render(lastList); } // not locked: drop the preview
 }
-new ResizeObserver(placeAnnounce).observe(ann);
-api.watchScreen(t=>{
-  t=(t||"").trim(); if(t===screenText) return;
-  screenText=t; $('ann-text').textContent=t; placeAnnounce();
-  if(t){ ann.classList.remove('pop'); void ann.offsetWidth; ann.classList.add('pop'); }
+$('me-color').addEventListener('click',()=>{
+  const p=$('shade-pop'); if(!p.hidden) return closeShadePop();
+  const h=$('chat-head'); p.style.top=(h.offsetTop+h.offsetHeight+8)+'px';
+  $('shade-chat').value=me.shade; p.hidden=false;
+});
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#shade-pop,#me-color')) closeShadePop(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeShadePop(); });
+$('shade-chat').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); render(lastList); });
+$('shade-lock').addEventListener('click',async()=>{
+  try{ await api.setShade(me.code,me.shade); me.hasShade=true; $('shade-pop').hidden=true; $('me-color').hidden=true; toast('Color locked to your account.'); }
+  catch(err){ fail('lock your color')(err); }
+});
+
+/* ---------- chat layout: the conversation starts under the clock header, whatever its size ---------- */
+function layoutChat(){
+  document.body.dataset.screen=current.id;
+  const h=$('chat-head'), below=h.offsetTop+h.offsetHeight; // layout position, unaffected by the entrance animation
+  if(current.id==='chat'&&below) $('log').style.paddingTop=(below+14)+'px';
+}
+new ResizeObserver(layoutChat).observe($('chat-head'));
+
+/* ---------- text the admin places on everyone's screen ----------
+   position x/y: 0..1 of the screen (centre of the text); size: fraction of the screen's shorter side,
+   so it lands in the same place on phones and computers */
+const WEIGHTS=[[100,'Thin'],[200,'Ultra Light'],[300,'Light'],[400,'Regular'],[500,'Medium'],[700,'Bold'],[900,'Black']];
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const numOr=(v,d,a,b)=>Number.isFinite(+v)&&v!==null&&v!==''?clamp(+v,a,b):d;
+function normScreen(v){
+  if(!v) return null; if(typeof v==='string') v={text:v};
+  const text=String(v.text||''); if(!text.trim()) return null;
+  return {text, x:numOr(v.x,.5,0,1), y:numOr(v.y,.42,0,1), size:numOr(v.size,.16,.02,.8),
+    weight:WEIGHTS.some(w=>w[0]===v.weight)?v.weight:700,
+    tint:/^#[0-9a-f]{6}$/i.test(v.tint||'')?v.tint.toUpperCase():'#FFFFFF', opacity:numOr(v.opacity,.75,.1,1)};
+}
+function drawText(el,c,W,H){
+  el.textContent=c.text; el.style.left=(c.x*100)+'%'; el.style.top=(c.y*100)+'%';
+  el.style.fontSize=(c.size*Math.min(W,H))+'px'; el.style.fontWeight=c.weight;
+  // Helvetica Neue's heaviest cut is a separate family on Macs
+  el.style.fontFamily=c.weight>=900?'"Helvetica Neue Condensed Black","HelveticaNeue-CondensedBlack",var(--font)':'';
+  el.style.setProperty('--ov-tint',c.tint); el.style.opacity=c.opacity;
+  const w=el.offsetWidth, max=W*.94; // never wider than the screen: shrink to fit narrow phones
+  if(w>max) el.style.fontSize=(c.size*Math.min(W,H)*max/w)+'px';
+}
+let screenCfg=null;
+function drawLive(){ const el=$('ov-text'); el.hidden=!screenCfg; if(screenCfg) drawText(el,screenCfg,innerWidth,innerHeight); }
+addEventListener('resize',()=>{ drawLive(); drawEditor&&drawEditor(); });
+
+/* on-screen keyboard (iOS keeps fixed bars behind it): lift the message bar above it */
+if(window.visualViewport){
+  const vv=visualViewport, fit=()=>{
+    const kb=Math.max(0,Math.round(innerHeight-vv.height-vv.offsetTop));
+    document.documentElement.style.setProperty('--kb',kb+'px');
+    document.body.classList.toggle('kb',kb>80);
+    if(kb>80 && current.id==='chat') $('log').scrollTop=$('log').scrollHeight;
+  };
+  vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit);
+}
+api.watchScreen(v=>{
+  const c=normScreen(v); if(JSON.stringify(c)===JSON.stringify(screenCfg)) return;
+  const changedText=!screenCfg||!c||c.text!==screenCfg.text;
+  screenCfg=c; drawLive();
+  if(c&&changedText){ const el=$('ov-text'); el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); }
   syncScreenTab();
 });
 const isAdminCode=v=>v.trim().toLowerCase()===ADMIN_CODE;
@@ -679,6 +841,7 @@ $('f-code').addEventListener('submit',async e=>{
   const code=$('code').value.trim(); const note=$('n-code');
   if(!code) return shake($('f-code'));
   if(isAdminCode(code)){ $('code').value=''; note.textContent=''; return openAdmin(); }
+  session.del('playlist-admin'); // signing in with a code ends any admin session
   note.className='note'; note.textContent='Checking…';
   try{
     const r=await api.checkCode(code);
@@ -700,7 +863,7 @@ $('f-user').addEventListener('submit',async e=>{
     const r=await api.claim(me.code,name,me.shade);
     if(r.taken){ note.className='note err'; note.textContent='That username is taken. Pick another.'; shake($('f-user')); return; }
     if(r.existing){ me.username=r.existing; toast(`This code is already ${r.existing}.`); return openChat(); }
-    me.username=name; locked=true;
+    me.username=name; me.hasShade=true; locked=true;
     $('uname').readOnly=true; $('ic-open').hidden=true; $('ic-closed').hidden=false;
     $('lock').setAttribute('aria-label','Username locked'); $('lock').classList.add('locked');
     note.className='note'; note.textContent=`Locked as ${name}`;
@@ -713,26 +876,23 @@ function resetUserStep(){
   locked=false; $('uname').value=''; $('uname').readOnly=false;
   $('ic-open').hidden=false; $('ic-closed').hidden=true; $('lock').setAttribute('aria-label','Lock username'); $('lock').classList.remove('locked');
   $('next').classList.remove('on'); $('next').tabIndex=-1;
-  const n=$('n-user'); n.className='note'; n.textContent='You cannot change your username';
+  const n=$('n-user'); n.className='note'; n.textContent='You cannot change your username or color';
 }
 
 /* ---------- 3. chat ---------- */
 let unwatch=null, unwatchMe=null;
 function openChat(){
-  go('chat'); startCountdown(); applyMyShade(me.shade);
-  $('to-admin').hidden = store.get('playlist-admin')!=='1';
+  go('chat'); startCountdown(); applyMyShade(me.shade); $('me-color').hidden=me.hasShade;
   if(!unwatch) unwatch=api.watch(render); else render(lastList); // re-render so "mine" matches the account that just logged in
   if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
   setTimeout(()=>$('msg').focus(),360);
 }
 // log out: forget the code on this browser. Logging back in with the same code keeps the username.
 $('logout').addEventListener('click',()=>{
-  unwatchMe&&unwatchMe(); unwatchMe=null;
-  store.del('playlist-code'); setMe(null,null); resetUserStep();
+  logOutUser();
   $('code').value=''; $('n-code').textContent='';
   go('s-code'); setTimeout(()=>$('code').focus(),360);
 });
-$('to-admin').addEventListener('click',()=>openAdmin());
 // the admin can rename, reset or delete this browser's account while it is open
 function onMyCode(name){
   if(!me.code) return;
@@ -743,7 +903,7 @@ function onMyCode(name){
     return;
   }
   if(name===null){
-    me.username=null;
+    me.username=null; me.shade=DEFAULT_SHADE; me.hasShade=false; applyMyShade(me.shade); // a reset account starts fresh, colour too
     if(current.id==='chat'){ resetUserStep(); $('shade-user').value=me.shade; go('s-user'); toast('Your username was reset. Choose a new one.'); }
     return;
   }
@@ -787,7 +947,6 @@ function render(all){
 let sending=false;
 $('f-msg').addEventListener('submit',async e=>{
   e.preventDefault(); const t=$('msg').value.trim(); if(!t||sending) return;
-  if(isAdminCode(t)){ $('msg').value=''; return openAdmin(); }
   sending=true;
   const sb=document.querySelector('#f-msg .send'); sb.classList.remove('launch'); void sb.offsetWidth; sb.classList.add('launch');
   try{ await api.send(me.code,me.username,t,me.shade); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
@@ -821,17 +980,23 @@ const twoStep=(b,fn)=>{ const label=b.textContent; let armed=false,t;
 const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again.`); };
 
 let adminUnsubs=[];
+// admin is a separate login: it signs out the code account on this browser and lasts for this browser session
+function logOutUser(){
+  unwatchMe&&unwatchMe(); unwatchMe=null;
+  store.del('playlist-code'); setMe(null,null); resetUserStep();
+}
 function openAdmin(){
-  store.set('playlist-admin','1'); // this browser now gets the admin shortcut in the chat
+  logOutUser(); session.set('playlist-admin','1');
   go('s-admin'); setTimeout(()=>document.querySelectorAll('.tabs,.seg').forEach(moveInd),60);
   if(adminOn) return;
-  adminOn=true; syncScreenTab(true);
+  adminOn=true; $('a-who').textContent=''; syncScreenTab(true);
   adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
 }
 $('a-exit').addEventListener('click',()=>{
   adminOn=false; adminUnsubs.forEach(u=>u&&u()); adminUnsubs=[];
   codeRows.clear(); $('a-codes').replaceChildren(); $('a-msgs').replaceChildren();
-  me.username ? openChat() : go('s-code');
+  session.del('playlist-admin'); $('code').value='';
+  go('s-code'); toast('Logged out of admin.');
 });
 
 const tabs=[...document.querySelectorAll('.tabs button')];
@@ -843,23 +1008,77 @@ function moveInd(box){
 }
 addEventListener('resize',()=>document.querySelectorAll('.tabs,.seg').forEach(moveInd));
 function pickTab(t){ tabs.forEach(x=>{const on=x===t; x.setAttribute('aria-selected',on); $(x.dataset.tab).hidden=!on;}); store.set('playlist-admin-tab',t.dataset.tab);
-  moveInd(t.parentElement); document.querySelectorAll('.seg').forEach(moveInd); }
+  moveInd(t.parentElement); document.querySelectorAll('.seg').forEach(moveInd); requestAnimationFrame(drawEditor); }
 tabs.forEach(t=>t.addEventListener('click',()=>pickTab(t)));
 pickTab(tabs.find(t=>t.dataset.tab===store.get('playlist-admin-tab'))||tabs[0]);
 
-/* screen tab */
+/* screen tab: a small editor. The preview uses the same drawing as the live screen. */
+const ed={text:'',x:.5,y:.42,size:.16,weight:700,tint:'#FFFFFF',opacity:.75};
+const stage=$('stage'), edText=$('ed-text'), handle=$('ed-handle');
+function drawEditor(){
+  if(!adminOn) return;
+  const r=stage.getBoundingClientRect(); if(!r.width) return;
+  drawText(edText,{...ed,text:ed.text||'Your text'},r.width,r.height);
+  edText.classList.toggle('ph',!ed.text);
+  const t=edText.getBoundingClientRect(); // corner handle sits on the text's bottom-right corner
+  handle.style.left=clamp(t.right-r.left,11,r.width-11)+'px'; handle.style.top=clamp(t.bottom-r.top,11,r.height-11)+'px';
+  $('ed-size').value=ed.size*100; $('ed-size-v').textContent=Math.round(ed.size*100)+'%';
+  const wi=WEIGHTS.findIndex(w=>w[0]===ed.weight); $('ed-weight').value=wi; $('ed-weight-v').textContent=WEIGHTS[wi][1];
+  $('ed-op').value=Math.round(ed.opacity*100); $('ed-op-v').textContent=Math.round(ed.opacity*100)+'%';
+  document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===ed.tint));
+  $('ed-tint').value=ed.tint.toLowerCase();
+}
 function syncScreenTab(fill){
   if(!adminOn) return;
-  $('a-now').textContent = screenText ? `Showing now: “${screenText}”` : 'Nothing is showing';
-  $('a-clear').disabled=!screenText;
-  if(fill) $('a-screen').value=screenText;
+  $('a-now').textContent = screenCfg ? 'Live on every screen' : 'Nothing is showing';
+  $('a-clear').disabled=!screenCfg;
+  if(fill){ Object.assign(ed,screenCfg||{text:''}); $('a-screen').value=ed.text; }
+  requestAnimationFrame(drawEditor);
 }
-$('f-screen').addEventListener('submit',e=>{
-  e.preventDefault(); const t=$('a-screen').value.trim();
-  if(!t) return shake($('f-screen'));
-  api.setScreen(t).then(()=>toast('Published on every screen.'),fail('publish'));
+$('a-screen').addEventListener('input',e=>{ ed.text=e.target.value; drawEditor(); });
+$('ed-size').addEventListener('input',e=>{ ed.size=+e.target.value/100; drawEditor(); });
+$('ed-weight').addEventListener('input',e=>{ ed.weight=WEIGHTS[+e.target.value][0]; drawEditor(); });
+$('ed-op').addEventListener('input',e=>{ ed.opacity=+e.target.value/100; drawEditor(); });
+document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ ed.tint=b.dataset.c; drawEditor(); }));
+$('ed-tint').addEventListener('input',e=>{ ed.tint=e.target.value.toUpperCase(); drawEditor(); });
+$('ed-center').addEventListener('click',()=>{ ed.x=.5; ed.y=.5; drawEditor(); });
+// preview as a phone or a computer screen
+document.querySelectorAll('#ed-view button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#ed-view button').forEach(x=>x.setAttribute('aria-checked',x===b));
+  stage.classList.toggle('phone',b.dataset.v==='phone'); moveInd($('ed-view')); drawEditor();
+}));
+if(innerWidth<600) document.querySelector('#ed-view [data-v=phone]').click();
+// drag the text to move it (snaps to the vertical centre line), drag the corner handle or scroll to scale it
+let drag=null;
+edText.addEventListener('pointerdown',e=>{
+  e.preventDefault(); edText.setPointerCapture(e.pointerId); edText.classList.add('drag');
+  drag={mode:'move',sx:e.clientX,sy:e.clientY,x:ed.x,y:ed.y};
 });
-$('a-clear').addEventListener('click',()=>api.setScreen('').then(()=>{ $('a-screen').value=''; toast('Screen cleared.'); },fail('clear')));
+handle.addEventListener('pointerdown',e=>{
+  e.preventDefault(); e.stopPropagation(); handle.setPointerCapture(e.pointerId);
+  const t=edText.getBoundingClientRect(), cx=t.left+t.width/2, cy=t.top+t.height/2;
+  drag={mode:'scale',cx,cy,d:Math.hypot(e.clientX-cx,e.clientY-cy)||1,size:ed.size};
+});
+const onMove=e=>{
+  if(!drag) return; const r=stage.getBoundingClientRect();
+  if(drag.mode==='move'){
+    let x=clamp(drag.x+(e.clientX-drag.sx)/r.width,0,1), y=clamp(drag.y+(e.clientY-drag.sy)/r.height,0,1);
+    const snap=Math.abs(x-.5)<.02; if(snap) x=.5; stage.classList.toggle('snapx',snap);
+    ed.x=x; ed.y=y;
+  } else ed.size=clamp(drag.size*Math.hypot(e.clientX-drag.cx,e.clientY-drag.cy)/drag.d,.03,.6);
+  drawEditor();
+};
+const onUp=()=>{ drag=null; edText.classList.remove('drag'); stage.classList.remove('snapx'); };
+[edText,handle].forEach(el=>{ el.addEventListener('pointermove',onMove); el.addEventListener('pointerup',onUp); el.addEventListener('pointercancel',onUp); });
+stage.addEventListener('wheel',e=>{ e.preventDefault(); ed.size=clamp(ed.size*(1-e.deltaY*.0015),.03,.6); drawEditor(); },{passive:false});
+new ResizeObserver(()=>drawEditor()).observe(stage);
+$('f-screen').addEventListener('submit',e=>{
+  e.preventDefault(); if(!ed.text.trim()) return shake($('f-screen'));
+  const r4=v=>Math.round(v*1e4)/1e4;
+  const cfg={text:ed.text,x:r4(ed.x),y:r4(ed.y),size:r4(ed.size),weight:ed.weight,tint:ed.tint,opacity:r4(ed.opacity)};
+  api.setScreen(cfg).then(()=>toast('Published on every screen.'),fail('publish'));
+});
+$('a-clear').addEventListener('click',()=>api.setScreen({text:''}).then(()=>toast('Screen cleared.'),fail('clear')));
 
 /* accounts tab */
 const randomCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return [...crypto.getRandomValues(new Uint32Array(8))].map(x=>A[x%A.length]).join('');};
@@ -978,7 +1197,8 @@ function renderAdminMsgs(list){
 
 /* ---------- resume session ---------- */
 const saved=store.get('playlist-code');
-if(saved){ api.checkCode(saved).then(r=>{
+if(session.get('playlist-admin')==='1') openAdmin();
+else if(saved){ api.checkCode(saved).then(r=>{
   if(!r.valid){ store.del('playlist-code'); return; }
   setMe(saved,r.username,r.shade);
   if(r.username) openChat(); else go('s-user');

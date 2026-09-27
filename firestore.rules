@@ -7,6 +7,12 @@ service cloud.firestore {
     function codePath(c) { return /databases/$(database)/documents/codes/$(c); }
     // profile colour: 0 = greenish white … 100 = vibrant green
     function okShade(d) { return !('shade' in d) || (d.shade is number && d.shade >= 0 && d.shade <= 100); }
+    // once an account has a colour it stays; only a reset (username back to null) clears it
+    function shadeLocked() {
+      return !('shade' in resource.data)
+        || request.resource.data.username == null
+        || request.resource.data.get('shade', null) == resource.data.shade;
+    }
 
     match /codes/{code} {
       allow get, list: if true;
@@ -17,6 +23,7 @@ service cloud.firestore {
       // claim / rename (the matching usernames doc must be written in the same transaction) or reset (username null)
       allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade'])
         && okShade(request.resource.data)
+        && shadeLocked()
         && (request.resource.data.username == null
           || (request.resource.data.username is string
             && request.resource.data.username.matches('^[^/]{2,20}$')
@@ -45,13 +52,20 @@ service cloud.firestore {
       allow delete: if true;
     }
 
-    // the message the admin writes on everyone's screen (doc site/screen)
+    // the text the admin places on everyone's screen (doc site/screen)
+    function inRange(d, k, lo, hi) { return !(k in d) || (d[k] is number && d[k] >= lo && d[k] <= hi); }
     match /site/{doc} {
       allow read: if true;
       allow write: if doc == 'screen'
-        && request.resource.data.keys().hasOnly(['text','ts'])
+        && request.resource.data.keys().hasOnly(['text','x','y','size','weight','tint','opacity','ts'])
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 280
+        && inRange(request.resource.data, 'x', 0, 1)
+        && inRange(request.resource.data, 'y', 0, 1)
+        && inRange(request.resource.data, 'size', 0, 1)
+        && inRange(request.resource.data, 'weight', 100, 900)
+        && inRange(request.resource.data, 'opacity', 0, 1)
+        && (!('tint' in request.resource.data) || request.resource.data.tint.matches('^#[0-9A-Fa-f]{6}$'))
         && request.resource.data.ts == request.time;
     }
   }
