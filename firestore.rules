@@ -17,11 +17,14 @@ service cloud.firestore {
     match /codes/{code} {
       allow get, list: if true;
       // codes are created by the admin panel; a new code is always unclaimed
+      // kind: 'blue' marks an experimental blue code; missing means a normal green code
       allow create: if code.lower() != 'admin'
-        && request.resource.data.keys().hasOnly(['username'])
-        && request.resource.data.username == null;
+        && request.resource.data.keys().hasOnly(['username','kind'])
+        && request.resource.data.username == null
+        && (!('kind' in request.resource.data) || request.resource.data.kind == 'blue');
       // claim / rename (the matching usernames doc must be written in the same transaction) or reset (username null)
-      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade'])
+      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade','kind'])
+        && request.resource.data.get('kind', 'green') == resource.data.get('kind', 'green')
         && okShade(request.resource.data)
         && shadeLocked()
         && (request.resource.data.username == null
@@ -42,7 +45,8 @@ service cloud.firestore {
 
     match /messages/{id} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts','shade'])
+      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts','shade','kind'])
+        && request.resource.data.get('kind', 'green') == get(codePath(request.resource.data.code)).data.get('kind', 'green')
         && okShade(request.resource.data)
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500

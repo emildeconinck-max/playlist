@@ -134,6 +134,8 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 .shade-range:focus-visible{outline:none}
 .shade-range::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:linear-gradient(90deg,hsl(135,28%,94%),hsl(135,53%,72%),hsl(135,78%,50%));box-shadow:inset 0 0 0 .5px rgba(0,0,0,.16),inset 0 1px 2px rgba(0,0,0,.1)}
 .shade-range::-moz-range-track{height:10px;border-radius:999px;background:linear-gradient(90deg,hsl(135,28%,94%),hsl(135,53%,72%),hsl(135,78%,50%));box-shadow:inset 0 0 0 .5px rgba(0,0,0,.16)}
+.shade-range.blue::-webkit-slider-runnable-track{background:linear-gradient(90deg,hsl(212,28%,94%),hsl(212,53%,72%),hsl(212,78%,50%))}
+.shade-range.blue::-moz-range-track{background:linear-gradient(90deg,hsl(212,28%,94%),hsl(212,53%,72%),hsl(212,78%,50%))}
 .shade-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 55%,rgba(240,240,240,.7));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.22),inset 0 -2px 3px rgba(0,0,0,.06);transition:transform .45s var(--spring)}
 .shade-range::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,rgba(255,255,255,.8) 55%,rgba(240,240,240,.7));box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.22);transition:transform .45s var(--spring)}
 .shade-range:active::-webkit-slider-thumb,.shade-range:focus-visible::-webkit-slider-thumb{transform:scale(1.3,1.18)}
@@ -163,7 +165,7 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 /* liquid-glass numerals: translucent white fill, bright rim, soft shadow, a slow sheen running through */
 .count{font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;user-select:none;-webkit-user-select:none}
 .count b{display:flex;align-items:center;font-weight:800;font-size:clamp(46px,13.5vw,88px);letter-spacing:-.02em}
-.count .u,.count .sep{
+.count .u,.count .sep,.m-clock .u,.m-clock .sep{
   display:inline-block;
   background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.78) 34%,rgba(255,255,255,.3) 50%,rgba(255,255,255,.52) 74%,rgba(255,255,255,.96) 100%);
   background-size:100% 240%;
@@ -173,7 +175,7 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
   animation:sheen 8s ease-in-out infinite;
 }
 .count .u{min-width:1.14em;text-align:center}
-.count .sep{padding:0 .02em;transform:translateY(-.07em)}
+.count .sep,.m-clock .sep{padding:0 .02em;transform:translateY(-.07em)}
 .count .u.tick{animation:tick .55s cubic-bezier(.2,.9,.3,1.3),sheen 8s ease-in-out infinite}
 @keyframes sheen{50%{background-position:0 100%}}
 @keyframes tick{from{transform:translateY(-55%) scale(.9);opacity:0}}
@@ -203,6 +205,13 @@ body.kb #chat .bar{bottom:calc(10px + var(--kb,0px))}
 .bubble.mine{align-self:flex-end;transform-origin:100% 100%}
 .bubble:hover{transform:scale(1.015)}
 .bubble.new{animation:bub .6s cubic-bezier(.2,.9,.3,1.3)}
+/* experimental blue accounts: thinner type, clearer glass, a slow float */
+.bubble.blue{font-weight:300;letter-spacing:.01em;animation:drift 6s ease-in-out infinite;animation-delay:var(--fd,0s)}
+.bubble.blue.new{animation:bub .6s cubic-bezier(.2,.9,.3,1.3),drift 6s ease-in-out .6s infinite}
+@keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.glass.tinted.blue{--rim-a:#fff;--rim-b:rgba(255,255,255,.4);
+  -webkit-backdrop-filter:blur(20px) saturate(2) brightness(1.08);backdrop-filter:blur(20px) saturate(2) brightness(1.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.44) 0%,rgba(255,255,255,.04) 58%,rgba(255,255,255,.2) 100%),var(--tint)}
 @keyframes bub{from{opacity:0;transform:translateY(12px) scale(.55)}}
 .empty{margin:auto;color:var(--muted);font-size:15px}
 .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);padding:10px 18px;font-size:14px;z-index:9;animation:toastin .5s var(--spring)}
@@ -213,8 +222,8 @@ body.kb #chat .bar{bottom:calc(10px + var(--kb,0px))}
    (it sits behind the glass, so the bars and bubbles blur it) */
 .overlay{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;transition:opacity .4s}
 body[data-screen=s-admin] .overlay{opacity:0}
-.ov-text{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);white-space:pre;text-align:center;line-height:1.05;letter-spacing:-.02em;
-  padding:.18em .12em .26em; /* room for descenders (g, j, y) and wide black glyphs; the fill is only painted inside the box */
+.ov-text{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);white-space:pre;text-align:center;line-height:1.3;letter-spacing:-.02em;
+  padding:.04em .12em; /* line-height 1.3 keeps descenders (g, j, y) inside the line box: Chrome crops anything that reaches below it here */
   color:transparent;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .9 0 0 0 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),linear-gradient(172deg,#fff 0%,var(--ov-tint,#fff) 50%,#fff 110%);
   background-size:180px 180px,100% 100%;
@@ -250,7 +259,30 @@ body[data-screen=s-admin] .overlay{opacity:0}
 .sw[aria-pressed=true]{transform:scale(1.15);box-shadow:0 0 0 2px #fff,0 0 0 3.5px rgba(0,0,0,.55)}
 .sw.custom{position:relative;overflow:hidden;background:conic-gradient(#ff6b6b,#ffd93d,#6bff95,#6bd5ff,#b06bff,#ff6b6b)}
 .sw.custom input{position:absolute;inset:-8px;width:44px;height:44px;opacity:0;cursor:pointer}
-.ed-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ed-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+/* chat + clock drawn on top of the preview, at the real layout's proportions (--u = one real pixel) */
+.stage{container-type:size;--u:calc(100cqw / 1440);--clock:88}
+.stage.phone{--u:calc(100cqw / 375);--clock:50.6}
+.stage > .ov-text{z-index:0}
+.stage > .ed-handle{z-index:2}
+.mock{position:absolute;inset:0;z-index:1;pointer-events:none}
+.m-clock{position:absolute;top:calc(14*var(--u));left:50%;transform:translateX(-50%);display:flex;align-items:center;font-weight:800;font-size:calc(var(--clock)*var(--u));letter-spacing:-.02em;line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+.m-clock .u{min-width:1.14em;text-align:center}
+.m-log{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(92*var(--u));width:calc(386*var(--u));max-width:calc(100% - 24*var(--u));display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.m-who{font-size:calc(13*var(--u));color:var(--muted);margin-left:calc(18*var(--u))}
+.m-b{align-self:flex-start;max-width:78%;padding:calc(12*var(--u)) calc(18*var(--u));border-radius:calc(23*var(--u));font-size:calc(17*var(--u));line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere}
+.m-b.glass{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 0 .5px rgba(0,0,0,.12),0 calc(6*var(--u)) calc(14*var(--u)) calc(-4*var(--u)) rgba(0,0,0,.14)}
+.m-bar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(28*var(--u));width:calc(402*var(--u));max-width:calc(100% - 32*var(--u));display:flex;gap:calc(8*var(--u))}
+.m-field{flex:1;height:calc(48*var(--u));border-radius:999px;display:flex;align-items:center;padding:0 calc(22*var(--u));font-size:calc(17*var(--u));color:var(--placeholder)}
+.m-send{width:calc(48*var(--u));height:calc(48*var(--u));border-radius:50%;flex:none}
+/* experimental tab */
+.lab-badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#0A5BC4;background:rgba(10,132,255,.14);padding:3px 9px;border-radius:999px}
+.lab h3{margin:6px 0 0;font-size:20px;line-height:26px;font-weight:700}
+.lab-preview{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:radial-gradient(60% 80% at 20% 10%,rgba(255,255,255,.9),rgba(255,255,255,0) 70%),radial-gradient(60% 80% at 90% 100%,hsla(212,70%,75%,.5),rgba(255,255,255,0) 70%),var(--ground);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
+.lab-preview .bubble{max-width:85%}
+.chip.blue{background:rgba(10,132,255,.14);color:#0A4FA8}
+.tabs.four button{font-size:14px}
+@media (max-width:480px){ .tabs.four button{font-size:12.5px} }
 .ed-top .seg{height:32px}
 .ed-top .seg button{font-size:12px;padding:0 10px}
 .a-row.wrap{flex-wrap:wrap}
@@ -323,6 +355,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
 .who-btn{font-weight:600;color:var(--ink);text-decoration:underline;text-decoration-color:rgba(0,0,0,.2);text-underline-offset:3px}
 .who-btn:hover{text-decoration-color:currentColor}
 /* a user's chat history (admin) */
+.hist .meta .a-btn{margin-left:auto}
 .sheet-wrap{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(40,40,45,.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:fadein .3s ease}
 @keyframes fadein{from{opacity:0}}
 .sheet{width:min(520px,100%);max-height:min(760px,100%);border-radius:26px;display:flex;flex-direction:column;overflow:hidden;animation:sheetin .5s var(--spring)}
@@ -441,17 +474,19 @@ body[data-screen=s-admin] .overlay{opacity:0}
       <button class="a-btn glass live" type="button" id="a-exit">Log out</button>
     </header>
     <div class="a-body" id="a-body">
-      <div class="tabs glass pill stagger" style="--i:1" role="tablist">
+      <div class="tabs four glass pill stagger" style="--i:1" role="tablist">
         <span class="ind" aria-hidden="true"></span>
         <button type="button" role="tab" data-tab="t-screen">Screen</button>
         <button type="button" role="tab" data-tab="t-accounts">Accounts</button>
         <button type="button" role="tab" data-tab="t-msgs">Messages</button>
+        <button type="button" role="tab" data-tab="t-lab">Experimental</button>
       </div>
       <div class="a-panel" id="t-screen" role="tabpanel">
         <form class="glass card a-stack" id="f-screen" autocomplete="off">
           <textarea id="a-screen" rows="2" maxlength="280" placeholder="Type the text for everyone's screen" aria-label="Screen text"></textarea>
           <div class="ed-top">
             <span class="a-muted">Drag to move · corner to scale</span>
+            <button class="a-btn sm glass live" type="button" id="ed-mock" aria-pressed="true">Hide chat</button>
             <div class="seg glass pill" id="ed-view" role="radiogroup" aria-label="Preview">
               <span class="ind" aria-hidden="true"></span>
               <button type="button" role="radio" data-v="phone" aria-checked="false">Phone</button>
@@ -460,6 +495,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
           </div>
           <div class="stage" id="stage" aria-label="Preview of everyone's screen">
             <div class="ov-text" id="ed-text"></div>
+            <div class="mock" id="mock" aria-hidden="true"></div>
             <span class="ed-handle" id="ed-handle" title="Drag to scale"></span>
           </div>
           <div class="ed-row"><span class="ed-lbl">Size</span><input class="ed-range" id="ed-size" type="range" min="3" max="60" step=".5" aria-label="Text size"><span class="ed-val" id="ed-size-v"></span></div>
@@ -517,6 +553,27 @@ body[data-screen=s-admin] .overlay{opacity:0}
         </div>
         <div class="a-list" id="a-codes"></div>
         <p class="a-muted a-empty" id="a-codes-empty" hidden></p>
+      </div>
+      <div class="a-panel" id="t-lab" role="tabpanel" hidden>
+        <div class="glass card a-stack lab">
+          <div><span class="lab-badge">Experimental</span><h3>Blue codes</h3></div>
+          <p class="a-muted">People who join with a blue code pick a blue color instead of a green one. Their messages use a thinner font, look clearer and float gently.</p>
+          <div class="lab-preview" id="lab-preview" aria-hidden="true"></div>
+          <form class="gen-row" id="f-blue" autocomplete="off">
+            <span class="gen-label">Generate</span>
+            <div class="stepper">
+              <button type="button" id="b-minus" aria-label="Fewer">−</button>
+              <input id="b-n" type="number" min="1" max="50" value="5" inputmode="numeric" aria-label="How many blue codes">
+              <button type="button" id="b-plus" aria-label="More">+</button>
+            </div>
+            <span class="gen-label">blue codes</span>
+            <button class="a-btn glass live" type="submit" style="--tint:hsla(212,78%,55%,.85);color:#fff">Generate</button>
+          </form>
+          <div class="a-row">
+            <span class="a-muted" id="lab-count"></span>
+            <button class="a-btn sm glass live" type="button" id="lab-copy">Copy free blue codes</button>
+          </div>
+        </div>
       </div>
       <div class="a-panel" id="t-msgs" role="tabpanel" hidden>
         <div class="a-row">
@@ -655,7 +712,7 @@ async function firebaseApi(cfg){
       // a code is valid only if the admin has created it
       if(/[\/]/.test(code) || code==="." || code==="..") return {valid:false};
       const snap = await fs.getDoc(codeRef(code));
-      return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade} : {valid:false};
+      return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade, kind:snap.data().kind||null} : {valid:false};
     },
     async claim(code,name,shade){
       const lower=name.toLowerCase();
@@ -670,8 +727,8 @@ async function firebaseApi(cfg){
         return {ok:true};
       });
     },
-    async send(code,username,text,shade){
-      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,shade,ts:fs.serverTimestamp()});
+    async send(code,username,text,shade,kind){
+      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,shade,...(kind==='blue'?{kind}:{}),ts:fs.serverTimestamp()});
     },
     setShade(code,shade){ return fs.updateDoc(codeRef(code),{shade}); },
     watch(cb){
@@ -692,11 +749,11 @@ async function firebaseApi(cfg){
     },
     watchCodes(cb){
       return fs.onSnapshot(fs.collection(db,"codes"),s=>cb(s.docs.map(d=>{const c=d.data();
-        return {code:d.id,username:c.username||null,shade:c.shade,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
+        return {code:d.id,username:c.username||null,shade:c.shade,kind:c.kind||null,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
     },
-    createCode(code){ return fs.runTransaction(db,async tx=>{
+    createCode(code,kind){ return fs.runTransaction(db,async tx=>{
       if((await tx.get(codeRef(code))).exists()) return false;
-      tx.set(codeRef(code),{username:null}); return true; }); },
+      tx.set(codeRef(code),{username:null,...(kind==='blue'?{kind}:{})}); return true; }); },
     resetCode(code){ return fs.runTransaction(db,async tx=>{
       const c=await tx.get(codeRef(code)); if(!c.exists()) return;
       const u=c.data().username; if(u) tx.delete(nameRef(u));
@@ -732,7 +789,7 @@ function localApi(){
   const load=()=>{ let d=null; try{d=JSON.parse(store.get(K))}catch{}
     d=d||{codes:{},msgs:[]};
     if(!d.v){ d.codes={...Object.fromEntries(LOCAL_CODES.map(c=>[c,null])),...d.codes}; d.v=2; } // seed the demo codes once
-    d.msgs=d.msgs||[]; d.screen=d.screen||""; d.shades=d.shades||{}; return d; };
+    d.msgs=d.msgs||[]; d.screen=d.screen||""; d.shades=d.shades||{}; d.kinds=d.kinds||{}; return d; };
   const subs=new Set(), emit=()=>{const d=load(); subs.forEach(f=>f(d));};
   const save=d=>{store.set(K,JSON.stringify(d)); ch&&ch.postMessage(1); emit();};
   const sub=f=>{subs.add(f); f(load()); return ()=>subs.delete(f);};
@@ -740,12 +797,12 @@ function localApi(){
   const taken=(d,name,code)=>Object.entries(d.codes).some(([c,n])=>c!==code&&n&&n.toLowerCase()===name.toLowerCase());
   ch&&(ch.onmessage=emit); addEventListener("storage",e=>e.key===K&&emit());
   return {
-    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c]}:{valid:false}; },
+    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c],kind:d.kinds[c]||null}:{valid:false}; },
     async claim(c,name,shade){ return mut(d=>{ d.shades[c]=shade; if(!(c in d.codes)) throw new Error("code");
       if(d.codes[c]) return {ok:false,existing:d.codes[c]};
       if(taken(d,name,c)) return {ok:false,taken:true};
       d.codes[c]=name; return {ok:true}; }); },
-    async send(code,username,text,shade){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,shade,ts:Date.now()}); }); },
+    async send(code,username,text,shade,kind){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,shade,...(kind==='blue'?{kind}:{}),ts:Date.now()}); }); },
     async setShade(c,shade){ mut(d=>{ d.shades[c]=shade; }); },
     async clearMessages(){ return mut(d=>{ const n=d.msgs.length; d.msgs=[]; return n; }); },
     watch:cb=>sub(d=>cb(d.msgs.slice(-150))),
@@ -753,10 +810,10 @@ function localApi(){
     watchScreen:cb=>sub(d=>cb(d.screen)),
     watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
     watchUser:(code,cb)=>sub(d=>cb(d.msgs.filter(m=>m.code===code))),
-    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],claimedAt:null})))),
-    async createCode(c){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; return true; }); },
+    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],kind:d.kinds[code]||null,claimedAt:null})))),
+    async createCode(c,kind){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; if(kind==='blue') d.kinds[c]=kind; return true; }); },
     async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; delete d.shades[c]; }); },
-    async deleteCode(c){ mut(d=>{ delete d.codes[c]; }); },
+    async deleteCode(c){ mut(d=>{ delete d.codes[c]; delete d.shades[c]; delete d.kinds[c]; }); },
     async renameCode(c,name){ return mut(d=>{ if(taken(d,name,c)) return {ok:false,taken:true}; d.codes[c]=name; return {ok:true}; }); },
     async deleteMessage(id){ mut(d=>{ d.msgs=d.msgs.filter(m=>m.id!==id); }); },
     async setScreen(cfg){ mut(d=>{ d.screen=cfg; }); }
@@ -782,18 +839,20 @@ const shake=el=>{el.classList.remove('shake');void el.offsetWidth;el.classList.a
 let me={code:null,username:null,shade:DEFAULT_SHADE};
 let adminOn=false;
 
-/* ---------- profile colour: 0 = greenish white … 100 = vibrant green (never dark) ---------- */
-function shadeOf(v){
+/* ---------- profile colour: 0 = whitish … 100 = vibrant (never dark). Green accounts, or blue ones (experimental) ---------- */
+function shadeOf(v,kind){
   v=(v===null||v===undefined||!Number.isFinite(+v))?DEFAULT_SHADE:Math.min(100,Math.max(0,+v));
-  const k=v/100, s=Math.round(28+50*k), l=Math.round(94-44*k);
-  return {bg:`hsl(135,${s}%,${l}%)`, tint:`hsla(135,${s}%,${l}%,.8)`, soft:`hsla(135,${s}%,${Math.min(l+8,90)}%,.6)`, ink:l<56?'#fff':'#0E3B1C'};
+  const blue=kind==='blue', h=blue?212:135, k=v/100, s=Math.round(28+50*k), l=Math.round(94-44*k);
+  return {bg:`hsl(${h},${s}%,${l}%)`, tint:`hsla(${h},${s}%,${l}%,${blue?.46:.8})`, soft:`hsla(${h},${s}%,${Math.min(l+8,90)}%,.6)`,
+    ink:blue?'#0B2A4A':(l<56?'#fff':'#0E3B1C')}; // blue glass is clearer, so its text stays dark
 }
 function applyMyShade(v){
-  const c=shadeOf(v), r=document.documentElement.style;
+  const c=shadeOf(v,me.kind), r=document.documentElement.style;
+  document.querySelectorAll('.shade-range').forEach(x=>x.classList.toggle('blue',me.kind==='blue'));
   r.setProperty('--me',c.bg); r.setProperty('--me-tint',c.tint); r.setProperty('--me-soft',c.soft); r.setProperty('--me-ink',c.ink);
 }
 // hasShade: the colour is saved on the account and can no longer change
-const setMe=(code,username,shade)=>{ const has=Number.isFinite(shade); me={code,username,shade:has?shade:DEFAULT_SHADE,hasShade:has}; applyMyShade(me.shade); };
+const setMe=(code,username,shade,kind)=>{ const has=Number.isFinite(shade); me={code,username,shade:has?shade:DEFAULT_SHADE,hasShade:has,kind:kind||null}; applyMyShade(me.shade); };
 applyMyShade(DEFAULT_SHADE);
 // username screen: pick before locking
 $('shade-user').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); });
@@ -880,7 +939,7 @@ $('f-code').addEventListener('submit',async e=>{
   try{
     const r=await api.checkCode(code);
     if(!r.valid){ note.className='note err'; note.textContent="That code doesn't work."; shake($('f-code')); $('code').select(); return; }
-    setMe(code,r.username,r.shade); store.set('playlist-code',code); note.textContent='';
+    setMe(code,r.username,r.shade,r.kind); store.set('playlist-code',code); note.textContent='';
     if(r.username) openChat();
     else { $('shade-user').value=me.shade; go('s-user'); setTimeout(()=>$('uname').focus(),360); }
   }catch(err){ console.error(err); note.className='note err'; note.textContent="Couldn't check the code. Try again."; }
@@ -954,9 +1013,12 @@ let lastList=[], shownCount=-1;
 const fresh=list=>list.filter(m=>Date.now()-m.ts<TTL);
 setInterval(()=>{ if(fresh(lastList).length!==shownCount) render(lastList); },60e3);
 const seenMsgs=new Set(); let firstRender=true;
+// blue bubbles float out of step with each other
+const floatDelay=id=>{ let h=0; for(const ch of String(id)) h=(h*31+ch.charCodeAt(0))|0; return (-(Math.abs(h)%6000)/1000)+'s'; };
 function render(all){
   lastList=all; const list=fresh(all); shownCount=list.length;
   const latest={}; for(const m of all) if(Number.isFinite(m.shade)) latest[m.code]=m.shade; // a person's newest colour applies to all their bubbles
+  const kindOf={}; for(const m of all) if(m.kind) kindOf[m.code]=m.kind;
   const log=$('log'); const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<60;
   log.replaceChildren(Object.assign(document.createElement('div'),{className:'spacer'}));
   if(!list.length){ log.append(Object.assign(document.createElement('p'),{className:'empty',textContent:'No messages yet. Say hi.'})); return; }
@@ -964,14 +1026,15 @@ function render(all){
   for(const m of list){
     if(!prev || m.ts-prev.ts>15*60e3) log.append(Object.assign(document.createElement('div'),{className:'stamp',textContent:fmtDay(m.ts)}));
     const mine=m.code===me.code;
-    const c=shadeOf(mine?me.shade:latest[m.code]);
+    const kind=mine?me.kind:kindOf[m.code], c=shadeOf(mine?me.shade:latest[m.code],kind);
     if(!mine && (!prev || prev.code!==m.code)){
       const who=document.createElement('div'), dot=document.createElement('i'); who.className='who';
       dot.style.background=c.bg; who.append(dot,m.username); log.append(who);
     }
     const b=document.createElement('div');
-    b.className='bubble glass tinted'+(mine?' mine':'')+(!firstRender&&!seenMsgs.has(m.id)?' new':'');
+    b.className='bubble glass tinted'+(mine?' mine':'')+(kind==='blue'?' blue':'')+(!firstRender&&!seenMsgs.has(m.id)?' new':'');
     b.style.setProperty('--tint',c.tint); b.style.color=c.ink;
+    if(kind==='blue') b.style.setProperty('--fd',floatDelay(m.id));
     b.textContent=m.text; b.title=fmtTime(m.ts);
     log.append(b); prev=m; seenMsgs.add(m.id);
   }
@@ -983,7 +1046,7 @@ $('f-msg').addEventListener('submit',async e=>{
   e.preventDefault(); const t=$('msg').value.trim(); if(!t||sending) return;
   sending=true;
   const sb=document.querySelector('#f-msg .send'); sb.classList.remove('launch'); void sb.offsetWidth; sb.classList.add('launch');
-  try{ await api.send(me.code,me.username,t,me.shade); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
+  try{ await api.send(me.code,me.username,t,me.shade,me.kind); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
   catch(err){ console.error(err); toast("Message not sent. Try again."); }
   finally{ sending=false; }
 });
@@ -992,11 +1055,13 @@ $('msg').addEventListener('input',()=>$('f-msg').classList.toggle('has-text',!!$
 
 /* ---------- countdown: each unit ticks in when it changes ---------- */
 let tick; const units=[...document.querySelectorAll('#c-time .u')];
+const secondsLeft=()=>Math.max(0,Math.floor((new Date(COUNTDOWN_TARGET).getTime()-Date.now())/1000));
+const countdownParts=()=>{ const s=secondsLeft(), p=n=>String(n).padStart(2,'0');
+  return [Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(p); };
 function startCountdown(){
   clearInterval(tick);
-  const target=new Date(COUNTDOWN_TARGET).getTime(), p=n=>String(n).padStart(2,'0');
-  const draw=()=>{ let s=Math.max(0,Math.floor((target-Date.now())/1000));
-    [Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(p).forEach((v,i)=>{
+  const draw=()=>{ const s=secondsLeft();
+    countdownParts().forEach((v,i)=>{
       const u=units[i]; if(u.textContent===v) return;
       u.textContent=v; u.classList.remove('tick'); void u.offsetWidth; u.classList.add('tick'); });
     if(s===0) clearInterval(tick); };
@@ -1062,12 +1127,34 @@ function drawEditor(){
   document.querySelectorAll('#ed-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===ed.tint));
   $('ed-tint').value=ed.tint.toLowerCase();
 }
+let mockOn=true;
+function drawMock(){
+  const m=$('mock'); if(!adminOn) return;
+  m.hidden=!mockOn; if(!mockOn) return;
+  const clock=mk('div','m-clock'); countdownParts().forEach((v,i)=>{ if(i) clock.append(mk('span','sep',':')); clock.append(mk('span','u',v)); });
+  const log=mk('div','m-log'); let prev=null;
+  const recent=fresh(adminMsgs).slice(0,4).reverse(); // adminMsgs is newest first
+  (recent.length?recent:[{code:'a',username:'Someone',text:'Chat messages show here',shade:72}]).forEach(x=>{
+    if(!prev||prev.code!==x.code) log.append(mk('div','m-who',x.username));
+    const c=shadeOf(x.shade,x.kind), b=mk('div','m-b glass tinted'+(x.kind==='blue'?' blue':''),x.text);
+    b.style.setProperty('--tint',c.tint); b.style.color=c.ink; log.append(b); prev=x;
+  });
+  const bar=mk('div','m-bar'); bar.append(mk('div','m-field glass','Message'),mk('div','m-send glass'));
+  m.replaceChildren(clock,log,bar);
+}
+setInterval(()=>{ // keep the preview clock ticking
+  if(!adminOn||!mockOn||$('t-screen').hidden) return;
+  const us=[...document.querySelectorAll('#mock .m-clock .u')]; countdownParts().forEach((v,i)=>{ if(us[i]&&us[i].textContent!==v) us[i].textContent=v; });
+},1000);
+$('ed-mock').addEventListener('click',e=>{
+  mockOn=!mockOn; e.currentTarget.setAttribute('aria-pressed',mockOn); e.currentTarget.textContent=mockOn?'Hide chat':'Show chat'; drawMock();
+});
 function syncScreenTab(fill){
   if(!adminOn) return;
   $('a-now').textContent = screenCfg ? 'Live on every screen' : 'Nothing is showing';
   $('a-clear').disabled=!screenCfg;
   if(fill){ Object.assign(ed,screenCfg||{text:''}); $('a-screen').value=ed.text; }
-  requestAnimationFrame(drawEditor);
+  drawMock(); requestAnimationFrame(drawEditor);
 }
 $('a-screen').addEventListener('input',e=>{ ed.text=e.target.value; drawEditor(); });
 $('ed-size').addEventListener('input',e=>{ ed.size=+e.target.value/100; drawEditor(); });
@@ -1129,7 +1216,7 @@ $('g-n').addEventListener('change',clampN);
 $('f-gen').addEventListener('submit',async e=>{
   e.preventDefault(); const n=clampN(), made=[];
   try{
-    for(let i=0;i<n;i++){ const c=randomCode(); if(await api.createCode(c)) made.push(c); }
+    for(let i=0;i<n;i++){ const c=randomCode(); if(await api.createCode(c,null)) made.push(c); }
     markFresh(made); pickFilter('all');
     copy(made.join('\n'),`Created ${made.length} code${made.length===1?'':'s'} and copied ${made.length===1?'it':'them'}.`);
   }catch(err){ if(made.length) markFresh(made); fail('create codes')(err); }
@@ -1180,7 +1267,8 @@ function codeRow(code){
   return { el, update(c){
     cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
     el.classList.toggle('free',!cur); el.classList.toggle('fresh',fresh_.has(code));
-    const dot=mk('span','dot'); if(cur) dot.style.background=shadeOf(c.shade).bg;
+    chip.classList.toggle('blue',c.kind==='blue'); chip.title=c.kind==='blue'?'Blue code (experimental) · copy':'Copy code';
+    const dot=mk('span','dot'); if(cur) dot.style.background=shadeOf(c.shade,c.kind).bg;
     when.replaceChildren(dot, cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet');
     reset.disabled=!cur; dirty(); } };
 }
@@ -1191,7 +1279,7 @@ function countTo(el,to){ // numbers roll to their new value
   requestAnimationFrame(step);
 }
 function renderCodes(list){
-  codeList=list;
+  codeList=list; syncLab();
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
   countTo($('st-total'),list.length); countTo($('st-claimed'),claimed); countTo($('st-free'),list.length-claimed);
@@ -1208,6 +1296,40 @@ function renderCodes(list){
   for(const [k,r] of codeRows) if(!seen.has(k)){ r.el.remove(); codeRows.delete(k); }
 }
 
+/* experimental tab: blue codes */
+function stepper(minus,input,plus){
+  const clampN=()=>{ const n=Math.min(50,Math.max(1,parseInt($(input).value,10)||1)); $(input).value=n; return n; };
+  $(minus).addEventListener('click',()=>{ $(input).value=Math.max(1,clampN()-1); });
+  $(plus).addEventListener('click',()=>{ $(input).value=Math.min(50,clampN()+1); });
+  $(input).addEventListener('change',clampN); return clampN;
+}
+const blueN=stepper('b-minus','b-n','b-plus');
+$('f-blue').addEventListener('submit',async e=>{
+  e.preventDefault(); const n=blueN(), made=[];
+  try{
+    for(let i=0;i<n;i++){ const c=randomCode(); if(await api.createCode(c,'blue')) made.push(c); }
+    markFresh(made);
+    copy(made.join('\n'),`Created ${made.length} blue code${made.length===1?'':'s'} and copied ${made.length===1?'it':'them'}.`);
+  }catch(err){ if(made.length) markFresh(made); fail('create blue codes')(err); }
+});
+$('lab-copy').addEventListener('click',()=>{
+  const free=codeList.filter(c=>c.kind==='blue'&&!c.username).map(c=>c.code);
+  if(!free.length) return toast('There are no free blue codes.');
+  copy(free.join('\n'),`Copied ${free.length} free blue code${free.length===1?'':'s'}.`);
+});
+function syncLab(){
+  const blue=codeList.filter(c=>c.kind==='blue'), claimed=blue.filter(c=>c.username).length;
+  $('lab-count').textContent=blue.length?`${blue.length} blue code${blue.length===1?'':'s'} · ${claimed} claimed · ${blue.length-claimed} free`:'No blue codes yet.';
+}
+(function labPreview(){ // a green and a blue bubble side by side, so the difference is visible
+  const box=$('lab-preview');
+  [['Regular account',72,null,'x1'],['Blue account, thinner and clearer',62,'blue','x2'],['it floats a little too',40,'blue','x3']].forEach(([t,v,k,id])=>{
+    const c=shadeOf(v,k), b=mk('div','bubble glass tinted'+(k?' blue':''),t);
+    b.style.setProperty('--tint',c.tint); b.style.color=c.ink; if(k) b.style.setProperty('--fd',floatDelay(id));
+    box.append(b);
+  });
+})();
+
 /* chat history of one account: every message it has sent, including ones users no longer see */
 let histUnsub=null;
 function openHistory(code,name){
@@ -1217,7 +1339,7 @@ function openHistory(code,name){
   histUnsub=api.watchUser(code,list=>{
     const box=$('hist-list'), cutoff=Date.now()-TTL, atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
     const latest=list.length?list[list.length-1]:null;
-    $('hist-dot').style.background=shadeOf(latest&&latest.shade).bg;
+    $('hist-dot').style.background=shadeOf(latest&&latest.shade,latest&&latest.kind).bg;
     const names=[...new Set(list.map(m=>m.username))];
     $('hist-sub').textContent=`Code ${code} · ${list.length} message${list.length===1?'':'s'}`+
       (list.length?` · ${list.filter(m=>m.ts>cutoff).length} still visible in the chat`:'')+
@@ -1227,10 +1349,11 @@ function openHistory(code,name){
     let prev=null;
     for(const m of list){
       if(!prev || new Date(m.ts).toDateString()!==new Date(prev.ts).toDateString()) box.append(mk('div','stamp',new Date(m.ts).toDateString()===new Date().toDateString()?'Today':new Date(m.ts).toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'})));
-      const c=shadeOf(m.shade), b=mk('div','bubble glass tinted'+(m.ts<=cutoff?' old':''),m.text);
-      b.style.setProperty('--tint',c.tint); b.style.color=c.ink;
+      const c=shadeOf(m.shade,m.kind), b=mk('div','bubble glass tinted'+(m.kind==='blue'?' blue':'')+(m.ts<=cutoff?' old':''),m.text);
+      b.style.setProperty('--tint',c.tint); b.style.color=c.ink; if(m.kind==='blue') b.style.setProperty('--fd',floatDelay(m.id));
       const meta=mk('div','meta',fmtTime(m.ts)+(m.username!==name?` · as ${m.username}`:''));
       if(m.ts<=cutoff) meta.append(mk('span','tag','hidden from users'));
+      meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).then(()=>toast('Message deleted.'),fail('delete the message'))));
       box.append(b,meta); prev=m;
     }
     if(atBottom||box.dataset.first!=='0'){ box.scrollTop=box.scrollHeight; box.dataset.first='0'; }
@@ -1249,13 +1372,13 @@ twoStep($('a-clearall'),async()=>{
 });
 setInterval(()=>adminOn&&renderAdminMsgs(adminMsgs),60e3);
 function renderAdminMsgs(list){
-  adminMsgs=list; const box=$('a-msgs'), cutoff=Date.now()-TTL;
+  adminMsgs=list; drawMock(); const box=$('a-msgs'), cutoff=Date.now()-TTL;
   const visible=list.filter(m=>m.ts>cutoff).length;
   $('a-mcount').textContent = `${list.length} message${list.length===1?'':'s'} · ${visible} visible to users (last ${MESSAGE_TTL_HOURS} h)`;
   box.replaceChildren();
   for(const m of list){
     const old=m.ts<=cutoff, row=mk('div','amsg glass card'+(old?' old':'')), meta=mk('div','amsg-meta');
-    const d=mk('span','dot'); d.style.background=shadeOf(m.shade).bg;
+    const d=mk('span','dot'); d.style.background=shadeOf(m.shade,m.kind).bg;
     const who=mk('button','who-btn',m.username); who.type='button'; who.title='Show chat history'; who.addEventListener('click',()=>openHistory(m.code,m.username));
     meta.append(d, who, mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
     if(old) meta.append(mk('span','tag','hidden from users'));
@@ -1269,7 +1392,7 @@ const saved=store.get('playlist-code');
 if(session.get('playlist-admin')==='1') openAdmin();
 else if(saved){ api.checkCode(saved).then(r=>{
   if(!r.valid){ store.del('playlist-code'); return; }
-  setMe(saved,r.username,r.shade);
+  setMe(saved,r.username,r.shade,r.kind);
   if(r.username) openChat(); else go('s-user');
 }).catch(()=>{}); }
 </script>
