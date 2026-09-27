@@ -110,10 +110,55 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.97)}}
 .empty{margin:auto;color:var(--muted);font-size:15px}
 .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);padding:10px 18px;font-size:14px;z-index:9}
+
+/* message the admin writes on everyone's screen */
+.announce{position:fixed;left:50%;top:max(28px,env(safe-area-inset-top));transform:translateX(-50%);z-index:4;width:max-content;max-width:min(402px,calc(100% - 32px));padding:12px 20px;border-radius:23px;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500}
+body[data-screen=chat] .announce{top:calc(max(28px,env(safe-area-inset-top)) + 56px)}
+.announce.pop{animation:annpop .35s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes annpop{from{opacity:0;transform:translate(-50%,-8px) scale(.96)}}
+
+/* admin panel */
+#s-admin{justify-content:flex-start;overflow-y:auto;padding-top:max(28px,env(safe-area-inset-top))}
+.admin{width:min(560px,100%);display:flex;flex-direction:column;gap:14px;padding-bottom:40px}
+.a-head{display:flex;align-items:center;gap:12px}
+.a-head h1{font-size:28px;line-height:34px;font-weight:600;letter-spacing:-.01em;margin:0}
+.a-head .a-muted{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-muted{color:var(--muted);font-size:13px;line-height:18px;margin:0}
+.a-btn{height:36px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:500;white-space:nowrap;flex:none}
+.a-btn.sm{height:30px;padding:0 12px;font-size:13px}
+.a-btn.danger{color:#D70015}
+.a-btn:disabled{opacity:.4;pointer-events:none}
+.bar .a-btn{height:48px}
+.card{border-radius:20px;padding:14px 16px}
+.a-body{display:flex;flex-direction:column;gap:14px}
+.a-panel{display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;gap:4px;padding:4px;height:44px}
+.tabs button{flex:1;border-radius:999px;font-size:15px;font-weight:500;color:var(--muted);transition:background .2s,color .2s}
+.tabs button[aria-selected=true]{background:rgba(255,255,255,.8);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.a-stack{display:flex;flex-direction:column;gap:10px}
+.a-stack textarea{font:inherit;color:var(--ink);background:none;border:0;outline:none;resize:vertical;min-height:72px;width:100%}
+.a-stack textarea::placeholder{color:var(--placeholder)}
+.a-row{display:flex;align-items:center;gap:8px}
+.a-row .a-muted{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-wide{width:100%}
+.a-list{display:flex;flex-direction:column;gap:8px}
+.acct{display:flex;flex-direction:column;gap:8px}
+.acct-top,.acct-bot{display:flex;align-items:center;gap:8px}
+.acct code{font:600 14px/20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(0,0,0,.06);padding:4px 10px;border-radius:8px;flex:none}
+.acct input{flex:1;height:36px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.acct input::placeholder{color:var(--placeholder)}
+.acct-bot .a-muted{flex:1;min-width:0}
+.amsg{display:flex;flex-direction:column;gap:6px}
+.amsg.old{opacity:.6}
+.amsg-meta{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--muted)}
+.amsg-meta b{color:var(--ink);font-weight:600}
+.amsg-meta .grow{flex:1;min-width:0}
+.tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.amsg-text{white-space:pre-wrap;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body>
+<body data-screen="s-code">
 
 <!-- 1. CODE -->
 <section class="screen" id="s-code" aria-label="Enter code">
@@ -164,6 +209,50 @@ input{font:inherit;color:var(--ink);border:0;background:none;outline:none;min-wi
   </form>
 </section>
 
+<!-- 4. ADMIN (opened by typing the admin code) -->
+<section class="screen out" id="s-admin" aria-label="Admin" hidden>
+  <div class="admin">
+    <header class="a-head">
+      <h1>Admin</h1>
+      <span class="a-muted" id="a-who"></span>
+      <button class="a-btn glass live" type="button" id="a-exit">Close</button>
+    </header>
+    <div class="a-body">
+      <div class="tabs glass pill" role="tablist">
+        <button type="button" role="tab" data-tab="t-screen">Screen</button>
+        <button type="button" role="tab" data-tab="t-accounts">Accounts</button>
+        <button type="button" role="tab" data-tab="t-msgs">Messages</button>
+      </div>
+      <div class="a-panel" id="t-screen" role="tabpanel">
+        <form class="glass card a-stack" id="f-screen" autocomplete="off">
+          <textarea id="a-screen" rows="3" maxlength="280" placeholder="Write something on everyone's screen" aria-label="Screen message"></textarea>
+          <div class="a-row">
+            <span class="a-muted" id="a-now"></span>
+            <button class="a-btn glass live" type="button" id="a-clear">Clear</button>
+            <button class="a-btn glass green live" type="submit">Publish</button>
+          </div>
+        </form>
+      </div>
+      <div class="a-panel" id="t-accounts" role="tabpanel" hidden>
+        <form class="bar a-wide" id="f-newcode" autocomplete="off">
+          <label class="field glass pill"><input id="a-newcode" placeholder="New code" aria-label="New code" maxlength="24"></label>
+          <button class="a-btn glass live" type="button" id="a-gen">Random</button>
+          <button class="circle glass live" type="submit" aria-label="Add code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </form>
+        <p class="a-muted" id="a-count"></p>
+        <div class="a-list" id="a-codes"></div>
+      </div>
+      <div class="a-panel" id="t-msgs" role="tabpanel" hidden>
+        <p class="a-muted" id="a-mcount"></p>
+        <div class="a-list" id="a-msgs"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="announce glass" id="announce" role="status" hidden><span id="ann-text"></span></div>
 <div class="toast glass pill" id="toast" hidden></div>
 
 <script type="module">
@@ -179,7 +268,12 @@ const FIREBASE_CONFIG = { // public web config for the "Playlist Lobby" Firebase
 const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts down to
 const COUNTDOWN_LABEL  = "Drop in";
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
+const ADMIN_CODE = "admin";                  // typing this (code box or chat box) opens the admin panel
+const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
 /* =============================================== */
+const DEMO = new URLSearchParams(location.search).has('demo'); // ?demo forces the offline demo (for testing)
+const TTL = MESSAGE_TTL_HOURS*3600e3;
+const NAME_RE = /^[\p{L}\p{N}_.\- ]{2,20}$/u;
 
 const $ = id => document.getElementById(id);
 const store = { get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}} };
@@ -247,16 +341,15 @@ async function firebaseApi(cfg){
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
   const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
   const db = fs.getFirestore(initializeApp(cfg));
+  const msgOut = d=>{const m=d.data();return {id:d.id,...m,ts:m.ts?m.ts.toMillis():Date.now()}};
+  const lost = e=>{console.error(e);toast("Connection lost. Reload the page.");};
+  const codeRef = c=>fs.doc(db,"codes",c), nameRef = n=>fs.doc(db,"usernames",n.toLowerCase());
   return {
     async checkCode(code){
-      const ref = fs.doc(db,"codes",code);
-      let snap = await fs.getDoc(ref);
-      if(!snap.exists()){
-        // codes are whitelisted in the security rules; creating an unknown code is refused
-        try{ await fs.setDoc(ref,{username:null}); }catch{ return {valid:false}; }
-        snap = await fs.getDoc(ref);
-      }
-      return {valid:true, username:snap.data().username||null};
+      // a code is valid only if the admin has created it
+      if(/[\/]/.test(code) || code==="." || code==="..") return {valid:false};
+      const snap = await fs.getDoc(codeRef(code));
+      return snap.exists() ? {valid:true, username:snap.data().username||null} : {valid:false};
     },
     async claim(code,name){
       const lower=name.toLowerCase();
@@ -276,29 +369,80 @@ async function firebaseApi(cfg){
     },
     watch(cb){
       const q=fs.query(fs.collection(db,"messages"),fs.orderBy("ts","desc"),fs.limit(150));
-      return fs.onSnapshot(q,s=>cb(s.docs.map(d=>{const m=d.data();return {id:d.id,...m,ts:m.ts?m.ts.toMillis():Date.now()}}).reverse()),e=>{console.error(e);toast("Chat connection lost. Reload the page.");});
-    }
+      return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut).reverse()),lost);
+    },
+    watchCode(code,cb){ return fs.onSnapshot(codeRef(code),s=>cb(s.exists()?(s.data().username||null):undefined),e=>console.error(e)); },
+    watchScreen(cb){ return fs.onSnapshot(fs.doc(db,"site","screen"),s=>cb(s.exists()&&s.data().text||""),e=>console.error(e)); },
+
+    /* admin */
+    watchAll(cb){
+      const q=fs.query(fs.collection(db,"messages"),fs.orderBy("ts","desc"),fs.limit(500));
+      return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut)),lost);
+    },
+    watchCodes(cb){
+      return fs.onSnapshot(fs.collection(db,"codes"),s=>cb(s.docs.map(d=>{const c=d.data();
+        return {code:d.id,username:c.username||null,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
+    },
+    createCode(code){ return fs.runTransaction(db,async tx=>{
+      if((await tx.get(codeRef(code))).exists()) return false;
+      tx.set(codeRef(code),{username:null}); return true; }); },
+    resetCode(code){ return fs.runTransaction(db,async tx=>{
+      const c=await tx.get(codeRef(code)); if(!c.exists()) return;
+      const u=c.data().username; if(u) tx.delete(nameRef(u));
+      tx.update(codeRef(code),{username:null,claimedAt:null}); }); },
+    deleteCode(code){ return fs.runTransaction(db,async tx=>{
+      const c=await tx.get(codeRef(code)); if(!c.exists()) return;
+      const u=c.data().username; if(u) tx.delete(nameRef(u));
+      tx.delete(codeRef(code)); }); },
+    renameCode(code,name){ return fs.runTransaction(db,async tx=>{
+      const c=await tx.get(codeRef(code)), n=await tx.get(nameRef(name));
+      if(!c.exists()) throw new Error("code");
+      if(n.exists() && n.data().code!==code) return {ok:false,taken:true};
+      const old=c.data().username;
+      if(old && old.toLowerCase()!==name.toLowerCase()) tx.delete(nameRef(old));
+      tx.set(nameRef(name),{code});
+      tx.update(codeRef(code),{username:name,claimedAt:c.data().claimedAt||fs.serverTimestamp()});
+      return {ok:true}; }); },
+    deleteMessage(id){ return fs.deleteDoc(fs.doc(db,"messages",id)); },
+    setScreen(text){ return fs.setDoc(fs.doc(db,"site","screen"),{text,ts:fs.serverTimestamp()}); }
   };
 }
 function localApi(){
   // Offline demo: works across tabs in the same browser, nothing is shared with other people.
   const K="playlist-demo", ch=("BroadcastChannel" in window)?new BroadcastChannel(K):null;
-  const load=()=>{try{return JSON.parse(store.get(K))||{codes:{},msgs:[]}}catch{return {codes:{},msgs:[]}}};
-  const save=d=>{store.set(K,JSON.stringify(d)); ch&&ch.postMessage(1);};
-  const subs=new Set(); const emit=()=>{const m=load().msgs.slice(-150); subs.forEach(f=>f(m));};
+  const load=()=>{ let d=null; try{d=JSON.parse(store.get(K))}catch{}
+    d=d||{codes:{},msgs:[]};
+    if(!d.v){ d.codes={...Object.fromEntries(LOCAL_CODES.map(c=>[c,null])),...d.codes}; d.v=2; } // seed the demo codes once
+    d.msgs=d.msgs||[]; d.screen=d.screen||""; return d; };
+  const subs=new Set(), emit=()=>{const d=load(); subs.forEach(f=>f(d));};
+  const save=d=>{store.set(K,JSON.stringify(d)); ch&&ch.postMessage(1); emit();};
+  const sub=f=>{subs.add(f); f(load()); return ()=>subs.delete(f);};
+  const mut=f=>{const d=load(), r=f(d); save(d); return r;};
+  const taken=(d,name,code)=>Object.entries(d.codes).some(([c,n])=>c!==code&&n&&n.toLowerCase()===name.toLowerCase());
   ch&&(ch.onmessage=emit); addEventListener("storage",e=>e.key===K&&emit());
   return {
-    async checkCode(c){ if(!LOCAL_CODES.includes(c)) return {valid:false}; return {valid:true,username:load().codes[c]||null}; },
-    async claim(c,name){ const d=load(); if(d.codes[c]) return {ok:false,existing:d.codes[c]};
-      if(Object.values(d.codes).some(n=>n.toLowerCase()===name.toLowerCase())) return {ok:false,taken:true};
-      d.codes[c]=name; save(d); return {ok:true}; },
-    async send(code,username,text){ const d=load(); d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,ts:Date.now()}); save(d); emit(); },
-    watch(cb){ subs.add(cb); cb(load().msgs.slice(-150)); return ()=>subs.delete(cb); }
+    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c]}:{valid:false}; },
+    async claim(c,name){ return mut(d=>{ if(!(c in d.codes)) throw new Error("code");
+      if(d.codes[c]) return {ok:false,existing:d.codes[c]};
+      if(taken(d,name,c)) return {ok:false,taken:true};
+      d.codes[c]=name; return {ok:true}; }); },
+    async send(code,username,text){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,ts:Date.now()}); }); },
+    watch:cb=>sub(d=>cb(d.msgs.slice(-150))),
+    watchCode:(c,cb)=>sub(d=>cb((c in d.codes)?d.codes[c]:undefined)),
+    watchScreen:cb=>sub(d=>cb(d.screen)),
+    watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
+    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,claimedAt:null})))),
+    async createCode(c){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; return true; }); },
+    async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; }); },
+    async deleteCode(c){ mut(d=>{ delete d.codes[c]; }); },
+    async renameCode(c,name){ return mut(d=>{ if(taken(d,name,c)) return {ok:false,taken:true}; d.codes[c]=name; return {ok:true}; }); },
+    async deleteMessage(id){ mut(d=>{ d.msgs=d.msgs.filter(m=>m.id!==id); }); },
+    async setScreen(text){ mut(d=>{ d.screen=text; }); }
   };
 }
 
 let api;
-try{ api = FIREBASE_CONFIG ? await firebaseApi(FIREBASE_CONFIG) : localApi(); }
+try{ api = FIREBASE_CONFIG && !DEMO ? await firebaseApi(FIREBASE_CONFIG) : localApi(); }
 catch(e){ console.error(e); api = localApi(); toast("Couldn't reach the server. Running in demo mode."); }
 
 /* ---------- navigation ---------- */
@@ -308,17 +452,37 @@ function go(id){
   current.classList.add('out'); const prev=current;
   setTimeout(()=>{prev.hidden=true;},350);
   next.hidden=false; requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.remove('out')));
-  current=next;
+  current=next; placeAnnounce();
 }
 const shake=el=>{el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');};
 
 let me={code:null,username:null};
+let adminOn=false;
+
+/* ---------- message the admin writes on everyone's screen ---------- */
+let screenText="";
+const ann=$('announce');
+function placeAnnounce(){
+  document.body.dataset.screen=current.id;
+  const show=!!screenText && current.id!=='s-admin';
+  ann.hidden=!show;
+  $('log').style.paddingTop = show&&current.id==='chat' ? (104+ann.offsetHeight+10)+'px' : '';
+}
+new ResizeObserver(placeAnnounce).observe(ann);
+api.watchScreen(t=>{
+  t=(t||"").trim(); if(t===screenText) return;
+  screenText=t; $('ann-text').textContent=t; placeAnnounce();
+  if(t){ ann.classList.remove('pop'); void ann.offsetWidth; ann.classList.add('pop'); }
+  syncScreenTab();
+});
+const isAdminCode=v=>v.trim().toLowerCase()===ADMIN_CODE;
 
 /* ---------- 1. code ---------- */
 $('f-code').addEventListener('submit',async e=>{
   e.preventDefault();
   const code=$('code').value.trim(); const note=$('n-code');
   if(!code) return shake($('f-code'));
+  if(isAdminCode(code)){ $('code').value=''; note.textContent=''; return openAdmin(); }
   note.className='note'; note.textContent='Checking…';
   try{
     const r=await api.checkCode(code);
@@ -334,7 +498,7 @@ let locked=false;
 $('f-user').addEventListener('submit',async e=>{
   e.preventDefault(); if(locked) return;
   const name=$('uname').value.trim(), note=$('n-user');
-  if(!/^[\p{L}\p{N}_.\- ]{2,20}$/u.test(name)){ note.className='note err'; note.textContent='Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'; return shake($('f-user')); }
+  if(!NAME_RE.test(name)){ note.className='note err'; note.textContent='Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'; return shake($('f-user')); }
   $('lock').disabled=true;
   try{
     const r=await api.claim(me.code,name);
@@ -349,17 +513,49 @@ $('f-user').addEventListener('submit',async e=>{
   finally{ $('lock').disabled=false; }
 });
 $('next').addEventListener('click',()=>locked&&openChat());
+function resetUserStep(){
+  locked=false; $('uname').value=''; $('uname').readOnly=false;
+  $('ic-open').hidden=false; $('ic-closed').hidden=true; $('lock').setAttribute('aria-label','Lock username');
+  $('next').classList.remove('on'); $('next').tabIndex=-1;
+  const n=$('n-user'); n.className='note'; n.textContent='You cannot change your username';
+}
 
 /* ---------- 3. chat ---------- */
-let unwatch=null;
+let unwatch=null, unwatchMe=null;
 function openChat(){
   go('chat'); startCountdown();
   if(!unwatch) unwatch=api.watch(render);
+  if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
   setTimeout(()=>$('msg').focus(),360);
+}
+// the admin can rename, reset or delete this browser's account while it is open
+function onMyCode(name){
+  if(!me.code) return;
+  if(name===undefined){
+    unwatchMe&&unwatchMe(); unwatchMe=null;
+    store.del('playlist-code'); me={code:null,username:null}; resetUserStep();
+    if(current.id!=='s-admin'){ go('s-code'); toast('Your code no longer works.'); }
+    return;
+  }
+  if(name===null){
+    me.username=null;
+    if(current.id==='chat'){ resetUserStep(); go('s-user'); toast('Your username was reset. Choose a new one.'); }
+    return;
+  }
+  if(name!==me.username){
+    const was=me.username; me.username=name;
+    if(current.id==='s-user') openChat();
+    else if(was && current.id==='chat') toast(`Your username is now ${name}.`);
+  }
 }
 const fmtTime=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 const fmtDay=t=>{const d=new Date(t),n=new Date();return (d.toDateString()===n.toDateString()?'Today':d.toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'}))+' '+fmtTime(t);};
-function render(list){
+// users only see the last MESSAGE_TTL_HOURS; older messages stay in the database for the admin
+let lastList=[], shownCount=-1;
+const fresh=list=>list.filter(m=>Date.now()-m.ts<TTL);
+setInterval(()=>{ if(fresh(lastList).length!==shownCount) render(lastList); },60e3);
+function render(all){
+  lastList=all; const list=fresh(all); shownCount=list.length;
   const log=$('log'); const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<60;
   log.replaceChildren(Object.assign(document.createElement('div'),{className:'spacer'}));
   if(!list.length){ log.append(Object.assign(document.createElement('p'),{className:'empty',textContent:'No messages yet. Say hi.'})); return; }
@@ -376,6 +572,7 @@ function render(list){
 let sending=false;
 $('f-msg').addEventListener('submit',async e=>{
   e.preventDefault(); const t=$('msg').value.trim(); if(!t||sending) return;
+  if(isAdminCode(t)){ $('msg').value=''; return openAdmin(); }
   sending=true;
   try{ await api.send(me.code,me.username,t); $('msg').value=''; $('log').scrollTop=$('log').scrollHeight; }
   catch(err){ console.error(err); toast("Message not sent. Try again."); }
@@ -393,9 +590,119 @@ function startCountdown(){
   draw(); tick=setInterval(draw,1000);
 }
 
+/* ---------- 4. admin ---------- */
+const mk=(tag,cls,text)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;};
+const btn=(label,cls,fn)=>{const b=mk('button','a-btn sm glass live '+(cls||''),label); b.type='button'; fn&&b.addEventListener('click',fn); responsive(b); return b;};
+// destructive buttons ask "Sure?" on the first tap (no confirm() popup; it can be blocked inside an iframe)
+const twoStep=(b,fn)=>{ const label=b.textContent; let armed=false,t;
+  b.addEventListener('click',async()=>{
+    if(!armed){ armed=true; b.textContent='Sure?'; t=setTimeout(()=>{armed=false;b.textContent=label;},3000); return; }
+    clearTimeout(t); armed=false; b.textContent=label; await fn(); }); return b; };
+const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again.`); };
+
+let adminUnsubs=[];
+function openAdmin(){
+  go('s-admin'); if(adminOn) return;
+  adminOn=true; syncScreenTab(true);
+  adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
+}
+$('a-exit').addEventListener('click',()=>{
+  adminOn=false; adminUnsubs.forEach(u=>u&&u()); adminUnsubs=[];
+  codeRows.clear(); $('a-codes').replaceChildren(); $('a-msgs').replaceChildren();
+  me.username ? openChat() : go('s-code');
+});
+
+const tabs=[...document.querySelectorAll('.tabs button')];
+function pickTab(t){ tabs.forEach(x=>{const on=x===t; x.setAttribute('aria-selected',on); $(x.dataset.tab).hidden=!on;}); store.set('playlist-admin-tab',t.dataset.tab); }
+tabs.forEach(t=>t.addEventListener('click',()=>pickTab(t)));
+pickTab(tabs.find(t=>t.dataset.tab===store.get('playlist-admin-tab'))||tabs[0]);
+
+/* screen tab */
+function syncScreenTab(fill){
+  if(!adminOn) return;
+  $('a-now').textContent = screenText ? `Showing now: “${screenText}”` : 'Nothing is showing';
+  $('a-clear').disabled=!screenText;
+  if(fill) $('a-screen').value=screenText;
+}
+$('f-screen').addEventListener('submit',e=>{
+  e.preventDefault(); const t=$('a-screen').value.trim();
+  if(!t) return shake($('f-screen'));
+  api.setScreen(t).then(()=>toast('Published on every screen.'),fail('publish'));
+});
+$('a-clear').addEventListener('click',()=>api.setScreen('').then(()=>{ $('a-screen').value=''; toast('Screen cleared.'); },fail('clear')));
+
+/* accounts tab */
+const randomCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return [...crypto.getRandomValues(new Uint32Array(8))].map(x=>A[x%A.length]).join('');};
+$('a-gen').addEventListener('click',()=>{ $('a-newcode').value=randomCode(); $('a-newcode').focus(); });
+$('f-newcode').addEventListener('submit',async e=>{
+  e.preventDefault(); const c=$('a-newcode').value.trim();
+  if(!/^[A-Za-z0-9_-]{1,24}$/.test(c) || isAdminCode(c)){ toast('Use letters, numbers, - or _ (and not "admin").'); return shake($('f-newcode')); }
+  try{ const ok=await api.createCode(c); toast(ok?`Code ${c} created.`:`Code ${c} already exists.`); if(ok) $('a-newcode').value=''; }
+  catch(err){ fail('create the code')(err); }
+});
+const codeRows=new Map();
+function codeRow(code){
+  const el=mk('div','acct glass card'), inp=mk('input'), when=mk('span','a-muted');
+  inp.placeholder='Unclaimed'; inp.maxLength=20; inp.setAttribute('aria-label',`Username for code ${code}`);
+  let cur=null;
+  const dirty=()=>{ save.hidden = inp.value.trim()===(cur||''); };
+  const save=btn('Save','green',async()=>{
+    const name=inp.value.trim();
+    if(!NAME_RE.test(name)){ toast('Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'); return shake(el); }
+    try{ const r=await api.renameCode(code,name);
+      if(!r.ok){ toast('That username is taken.'); return shake(el); }
+      toast(`Code ${code} is now ${name}.`); inp.blur(); }
+    catch(err){ fail('save the username')(err); }
+  });
+  const reset=twoStep(btn('Reset'),()=>api.resetCode(code).then(()=>toast(`Code ${code} can pick a new username.`),fail('reset')));
+  const del=twoStep(btn('Delete','danger'),()=>api.deleteCode(code).then(()=>toast(`Code ${code} deleted.`),fail('delete the code')));
+  inp.addEventListener('input',dirty);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(!save.hidden) save.click(); }
+    if(e.key==='Escape'){ inp.value=cur||''; dirty(); inp.blur(); } });
+  const top=mk('div','acct-top'), bot=mk('div','acct-bot');
+  top.append(mk('code',null,code),inp); bot.append(when,save,reset,del); el.append(top,bot);
+  return { el, update(c){
+    cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
+    when.textContent = cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet';
+    reset.disabled=!cur; dirty(); } };
+}
+function renderCodes(list){
+  list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+  const box=$('a-codes'), seen=new Set();
+  $('a-count').textContent = list.length ? `${list.length} code${list.length===1?'':'s'} · ${list.filter(c=>c.username).length} claimed` : 'No codes yet. Add one above.';
+  list.forEach((c,i)=>{
+    seen.add(c.code); let r=codeRows.get(c.code);
+    if(!r){ r=codeRow(c.code); codeRows.set(c.code,r); }
+    r.update(c);
+    if(box.children[i]!==r.el) box.insertBefore(r.el,box.children[i]||null); // only move rows that are out of place (keeps focus while typing)
+  });
+  for(const [k,r] of codeRows) if(!seen.has(k)){ r.el.remove(); codeRows.delete(k); }
+}
+
+/* messages tab */
+let adminMsgs=[];
+setInterval(()=>adminOn&&renderAdminMsgs(adminMsgs),60e3);
+function renderAdminMsgs(list){
+  adminMsgs=list; const box=$('a-msgs'), cutoff=Date.now()-TTL;
+  const visible=list.filter(m=>m.ts>cutoff).length;
+  $('a-mcount').textContent = `${list.length} message${list.length===1?'':'s'} · ${visible} visible to users (last ${MESSAGE_TTL_HOURS} h)`;
+  box.replaceChildren();
+  for(const m of list){
+    const old=m.ts<=cutoff, row=mk('div','amsg glass card'+(old?' old':'')), meta=mk('div','amsg-meta');
+    meta.append(mk('b',null,m.username), mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
+    if(old) meta.append(mk('span','tag','hidden from users'));
+    meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).catch(fail('delete the message'))));
+    row.append(meta, mk('div','amsg-text',m.text)); box.append(row);
+  }
+}
+
 /* ---------- resume session ---------- */
 const saved=store.get('playlist-code');
-if(saved){ api.checkCode(saved).then(r=>{ if(r.valid&&r.username){ me={code:saved,username:r.username}; openChat(); } }).catch(()=>{}); }
+if(saved){ api.checkCode(saved).then(r=>{
+  if(!r.valid){ store.del('playlist-code'); return; }
+  me={code:saved,username:r.username};
+  if(r.username) openChat(); else go('s-user');
+}).catch(()=>{}); }
 </script>
 </body>
 </html>
