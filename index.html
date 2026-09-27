@@ -213,7 +213,8 @@ body.kb #chat .bar{bottom:calc(10px + var(--kb,0px))}
    (it sits behind the glass, so the bars and bubbles blur it) */
 .overlay{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;transition:opacity .4s}
 body[data-screen=s-admin] .overlay{opacity:0}
-.ov-text{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);white-space:pre;text-align:center;line-height:.95;letter-spacing:-.02em;
+.ov-text{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);white-space:pre;text-align:center;line-height:1.05;letter-spacing:-.02em;
+  padding:.18em .12em .26em; /* room for descenders (g, j, y) and wide black glyphs; the fill is only painted inside the box */
   color:transparent;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .9 0 0 0 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),linear-gradient(172deg,#fff 0%,var(--ov-tint,#fff) 50%,#fff 110%);
   background-size:180px 180px,100% 100%;
@@ -319,6 +320,26 @@ body[data-screen=s-admin] .overlay{opacity:0}
 .amsg.old{opacity:.6}
 .amsg-meta{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--muted)}
 .amsg-meta b{color:var(--ink);font-weight:600}
+.who-btn{font-weight:600;color:var(--ink);text-decoration:underline;text-decoration-color:rgba(0,0,0,.2);text-underline-offset:3px}
+.who-btn:hover{text-decoration-color:currentColor}
+/* a user's chat history (admin) */
+.sheet-wrap{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(40,40,45,.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0}}
+.sheet{width:min(520px,100%);max-height:min(760px,100%);border-radius:26px;display:flex;flex-direction:column;overflow:hidden;animation:sheetin .5s var(--spring)}
+@keyframes sheetin{from{opacity:0;transform:translateY(30px) scale(.96)}}
+.sheet-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px 20px}
+.sheet-head .dot{width:12px;height:12px;margin:0}
+.sheet-head h2{margin:0;font-size:19px;line-height:24px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-sub{padding:0 20px 10px;margin:0}
+.hist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 16px 20px;overscroll-behavior:contain}
+.hist .stamp{margin:8px 0 0}
+.hist .bubble{align-self:flex-start;max-width:88%}
+.hist .bubble.old{opacity:.6}
+.hist .meta{font-size:12px;color:var(--muted);margin:-2px 0 2px 10px;display:flex;gap:8px;align-items:center}
+@media (max-width:480px){
+  .sheet-wrap{align-items:flex-end;padding:0}
+  .sheet{width:100%;max-height:88dvh;border-radius:26px 26px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+}
 .amsg-meta .grow{flex:1;min-width:0}
 .tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:999px;white-space:nowrap}
 .amsg-text{white-space:pre-wrap;overflow-wrap:anywhere}
@@ -508,6 +529,14 @@ body[data-screen=s-admin] .overlay{opacity:0}
   </div>
 </section>
 
+<div class="sheet-wrap" id="hist-wrap" hidden>
+  <div class="sheet glass" role="dialog" aria-modal="true" aria-labelledby="hist-title">
+    <div class="sheet-head"><span class="dot" id="hist-dot"></span><h2 id="hist-title">History</h2>
+      <button class="circle glass live mini" type="button" id="hist-close" aria-label="Close"><svg viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+    <p class="a-muted sheet-sub" id="hist-sub"></p>
+    <div class="hist" id="hist-list"></div>
+  </div>
+</div>
 <div class="shade-pop glass" id="shade-pop" hidden>
   <p class="pop-title">Pick your color. It locks to your account.</p>
   <input class="shade-range" id="shade-chat" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
@@ -653,6 +682,10 @@ async function firebaseApi(cfg){
     watchScreen(cb){ return fs.onSnapshot(fs.doc(db,"site","screen"),s=>cb(s.exists()?s.data():null),e=>console.error(e)); },
 
     /* admin */
+    watchUser(code,cb){ // no orderBy here, so no extra index is needed; sorted on the client
+      const q=fs.query(fs.collection(db,"messages"),fs.where("code","==",code));
+      return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut).sort((a,b)=>a.ts-b.ts)),lost);
+    },
     watchAll(cb){
       const q=fs.query(fs.collection(db,"messages"),fs.orderBy("ts","desc"),fs.limit(500));
       return fs.onSnapshot(q,s=>cb(s.docs.map(msgOut)),lost);
@@ -719,6 +752,7 @@ function localApi(){
     watchCode:(c,cb)=>sub(d=>cb((c in d.codes)?d.codes[c]:undefined)),
     watchScreen:cb=>sub(d=>cb(d.screen)),
     watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
+    watchUser:(code,cb)=>sub(d=>cb(d.msgs.filter(m=>m.code===code))),
     watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],claimedAt:null})))),
     async createCode(c){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; return true; }); },
     async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; delete d.shades[c]; }); },
@@ -992,7 +1026,7 @@ function openAdmin(){
   adminOn=true; $('a-who').textContent=''; syncScreenTab(true);
   adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
 }
-$('a-exit').addEventListener('click',()=>{
+$('a-exit').addEventListener('click',()=>{ closeHistory();
   adminOn=false; adminUnsubs.forEach(u=>u&&u()); adminUnsubs=[];
   codeRows.clear(); $('a-codes').replaceChildren(); $('a-msgs').replaceChildren();
   session.del('playlist-admin'); $('code').value='';
@@ -1141,7 +1175,8 @@ function codeRow(code){
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(!save.hidden) save.click(); }
     if(e.key==='Escape'){ inp.value=cur||''; dirty(); inp.blur(); } });
   const mid=mk('div','acct-mid'), acts=mk('div','acct-acts');
-  mid.append(inp,when); acts.append(save,reset,del); el.append(chip,mid,acts);
+  const hist=btn('History','',()=>openHistory(code,cur));
+  mid.append(inp,when); acts.append(hist,save,reset,del); el.append(chip,mid,acts);
   return { el, update(c){
     cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
     el.classList.toggle('free',!cur); el.classList.toggle('fresh',fresh_.has(code));
@@ -1173,6 +1208,39 @@ function renderCodes(list){
   for(const [k,r] of codeRows) if(!seen.has(k)){ r.el.remove(); codeRows.delete(k); }
 }
 
+/* chat history of one account: every message it has sent, including ones users no longer see */
+let histUnsub=null;
+function openHistory(code,name){
+  closeHistory();
+  $('hist-title').textContent=name||`Code ${code}`; $('hist-sub').textContent='Loading…';
+  $('hist-list').replaceChildren(); $('hist-wrap').hidden=false;
+  histUnsub=api.watchUser(code,list=>{
+    const box=$('hist-list'), cutoff=Date.now()-TTL, atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+    const latest=list.length?list[list.length-1]:null;
+    $('hist-dot').style.background=shadeOf(latest&&latest.shade).bg;
+    const names=[...new Set(list.map(m=>m.username))];
+    $('hist-sub').textContent=`Code ${code} · ${list.length} message${list.length===1?'':'s'}`+
+      (list.length?` · ${list.filter(m=>m.ts>cutoff).length} still visible in the chat`:'')+
+      (names.length>1?` · also posted as ${names.filter(n=>n!==name).join(', ')}`:'');
+    box.replaceChildren();
+    if(!list.length){ box.append(mk('p','empty','No messages from this account.')); return; }
+    let prev=null;
+    for(const m of list){
+      if(!prev || new Date(m.ts).toDateString()!==new Date(prev.ts).toDateString()) box.append(mk('div','stamp',new Date(m.ts).toDateString()===new Date().toDateString()?'Today':new Date(m.ts).toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'})));
+      const c=shadeOf(m.shade), b=mk('div','bubble glass tinted'+(m.ts<=cutoff?' old':''),m.text);
+      b.style.setProperty('--tint',c.tint); b.style.color=c.ink;
+      const meta=mk('div','meta',fmtTime(m.ts)+(m.username!==name?` · as ${m.username}`:''));
+      if(m.ts<=cutoff) meta.append(mk('span','tag','hidden from users'));
+      box.append(b,meta); prev=m;
+    }
+    if(atBottom||box.dataset.first!=='0'){ box.scrollTop=box.scrollHeight; box.dataset.first='0'; }
+  });
+}
+function closeHistory(){ histUnsub&&histUnsub(); histUnsub=null; $('hist-wrap').hidden=true; $('hist-list').dataset.first='1'; }
+$('hist-close').addEventListener('click',closeHistory);
+$('hist-wrap').addEventListener('click',e=>{ if(e.target===$('hist-wrap')) closeHistory(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeHistory(); });
+
 /* messages tab */
 let adminMsgs=[];
 twoStep($('a-clearall'),async()=>{
@@ -1188,7 +1256,8 @@ function renderAdminMsgs(list){
   for(const m of list){
     const old=m.ts<=cutoff, row=mk('div','amsg glass card'+(old?' old':'')), meta=mk('div','amsg-meta');
     const d=mk('span','dot'); d.style.background=shadeOf(m.shade).bg;
-    meta.append(d, mk('b',null,m.username), mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
+    const who=mk('button','who-btn',m.username); who.type='button'; who.title='Show chat history'; who.addEventListener('click',()=>openHistory(m.code,m.username));
+    meta.append(d, who, mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
     if(old) meta.append(mk('span','tag','hidden from users'));
     meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).catch(fail('delete the message'))));
     row.append(meta, mk('div','amsg-text',m.text)); box.append(row);
