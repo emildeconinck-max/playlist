@@ -5,7 +5,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function codePath(c) { return /databases/$(database)/documents/codes/$(c); }
-    // profile colour: 0 = greenish white … 100 = vibrant green
+    function isHex(v) { return v is string && v.matches('^#[0-9A-Fa-f]{6}$'); }
+    // profile colour: 0 = whitish … 100 = vibrant
     function okShade(d) { return !('shade' in d) || (d.shade is number && d.shade >= 0 && d.shade <= 100); }
     // once an account has a colour it stays; only a reset (username back to null) clears it
     function shadeLocked() {
@@ -13,18 +14,25 @@ service cloud.firestore {
         || request.resource.data.username == null
         || request.resource.data.get('shade', null) == resource.data.shade;
     }
+    // code kinds: none = green, 'blue' (experimental), 'rare' (designed by the admin), 'admin' (the admin's chat account)
+    function okKind(d, code) {
+      return !('kind' in d) || d.kind in ['blue', 'rare'] || (d.kind == 'admin' && code == '_admin');
+    }
 
     match /codes/{code} {
       allow get, list: if true;
       // codes are created by the admin panel; a new code is always unclaimed
-      // kind: 'blue' marks an experimental blue code; missing means a normal green code
       allow create: if code.lower() != 'admin'
         && request.resource.data.keys().hasOnly(['username','kind'])
         && request.resource.data.username == null
-        && (!('kind' in request.resource.data) || request.resource.data.kind == 'blue');
-      // claim / rename (the matching usernames doc must be written in the same transaction) or reset (username null)
-      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade','kind'])
-        && request.resource.data.get('kind', 'green') == resource.data.get('kind', 'green')
+        && okKind(request.resource.data, code);
+      // claim / rename (the matching usernames doc must be written in the same transaction), reset (username null),
+      // or turning a free code rare / normal (kind may only change while the code is free)
+      allow update: if request.resource.data.keys().hasOnly(['username','claimedAt','shade','kind','tint'])
+        && okKind(request.resource.data, code)
+        && (request.resource.data.get('kind', 'green') == resource.data.get('kind', 'green')
+          || (resource.data.username == null && request.resource.data.username == null))
+        && (!('tint' in request.resource.data) || isHex(request.resource.data.tint))
         && okShade(request.resource.data)
         && shadeLocked()
         && (request.resource.data.username == null
@@ -45,13 +53,55 @@ service cloud.firestore {
 
     match /messages/{id} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts','shade','kind'])
+      allow create: if request.resource.data.keys().hasOnly(['code','username','text','ts','shade','kind','tint'])
         && request.resource.data.get('kind', 'green') == get(codePath(request.resource.data.code)).data.get('kind', 'green')
+        && (!('tint' in request.resource.data) || isHex(request.resource.data.tint))
         && okShade(request.resource.data)
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500
         && request.resource.data.ts == request.time
         && get(codePath(request.resource.data.code)).data.username == request.resource.data.username;
+      allow update: if false;
+      allow delete: if true;
+    }
+
+    // the look of a rare code: texture image (small JPEG data URL), colours, weight, roundness
+    match /styles/{code} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['texture','strength','tint','ink','weight','radius'])
+        && (request.resource.data.texture == null
+          || (request.resource.data.texture is string && request.resource.data.texture.size() < 400000))
+        && request.resource.data.strength is number && request.resource.data.strength >= 0 && request.resource.data.strength <= 1
+        && isHex(request.resource.data.tint) && isHex(request.resource.data.ink)
+        && request.resource.data.weight is number && request.resource.data.weight >= 100 && request.resource.data.weight <= 900
+        && request.resource.data.radius is number && request.resource.data.radius >= 0 && request.resource.data.radius <= 40;
+      allow delete: if true;
+    }
+
+    // private messages between two accounts
+    match /dms/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['from','fromName','to','toName','text','ts'])
+        && request.resource.data.from != request.resource.data.to
+        && get(codePath(request.resource.data.from)).data.username == request.resource.data.fromName
+        && exists(codePath(request.resource.data.to))
+        && request.resource.data.toName is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 300
+        && request.resource.data.ts == request.time;
+      allow update: if false;
+      allow delete: if true;
+    }
+
+    // one like per pair of accounts; the doc id is "<from>_<to>"
+    match /likes/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['from','to','ts'])
+        && id == request.resource.data.from + '_' + request.resource.data.to
+        && request.resource.data.from != request.resource.data.to
+        && get(codePath(request.resource.data.from)).data.username != null
+        && exists(codePath(request.resource.data.to))
+        && request.resource.data.ts == request.time;
       allow update: if false;
       allow delete: if true;
     }

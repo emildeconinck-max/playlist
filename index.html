@@ -281,6 +281,63 @@ body[data-screen=s-admin] .overlay{opacity:0}
 .lab-preview{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:radial-gradient(60% 80% at 20% 10%,rgba(255,255,255,.9),rgba(255,255,255,0) 70%),radial-gradient(60% 80% at 90% 100%,hsla(212,70%,75%,.5),rgba(255,255,255,0) 70%),var(--ground);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
 .lab-preview .bubble{max-width:85%}
 .chip.blue{background:rgba(10,132,255,.14);color:#0A4FA8}
+.chip.rare{background:linear-gradient(120deg,#FFE9A8,#F7C6FF,#B9E6FF);color:#5A3B00}
+/* rare codes: the admin designs the bubble (texture image, colour, text colour, weight, roundness) */
+.glass.tinted.rare{--rim-a:#fff;--rim-b:rgba(255,255,255,.35);
+  background:linear-gradient(180deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,0) 55%,rgba(255,255,255,.12) 100%),linear-gradient(var(--tint),var(--tint)),var(--tex,none) center/cover}
+.rare-badge{color:#7A4B00;background:linear-gradient(120deg,rgba(255,214,120,.5),rgba(240,170,255,.45),rgba(150,215,255,.5))}
+.rare-body{overflow-y:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.rare-body .lab-preview{min-height:128px;justify-content:center}
+.file-btn{display:inline-flex;align-items:center;cursor:pointer}
+.rare-note{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 8px 6px 16px;width:min(402px,100%);margin-top:18px}
+.rare-note .bubble{padding:8px 14px;max-width:none;animation:none}
+.rare-note span{font-size:15px;color:var(--muted)}
+/* likes next to names */
+.likes{font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;background:rgba(255,255,255,.55);padding:0 7px;border-radius:999px;line-height:17px;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.1)}
+.bubble.other{cursor:pointer}
+/* tap someone's bubble: like them or send a private message */
+.pm-pop{position:fixed;z-index:8;width:min(320px,calc(100% - 24px));border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:10px;animation:popin .4s var(--spring);transform-origin:50% 0}
+.pm-head{display:flex;align-items:center;gap:8px;padding:0 2px}
+.pm-head b{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-head .dot{width:10px;height:10px;margin:0}
+.like-btn{display:inline-flex;align-items:center;gap:6px}
+.like-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .45s var(--spring)}
+.like-btn[aria-pressed=true]{color:#E0245E}
+.like-btn[aria-pressed=true] svg{fill:currentColor;transform:scale(1.15)}
+.like-btn.pop svg{animation:heart .5s var(--spring)}
+@keyframes heart{40%{transform:scale(1.5)}}
+.pm-form{display:flex;gap:8px;align-items:center}
+.pm-form .field{height:42px;padding:0 16px}
+.pm-form .circle{width:42px;height:42px}
+.pm-form .circle svg{width:18px;height:18px}
+/* incoming private messages float in, then go after 10 s or when tapped */
+.dm-stack{position:fixed;left:50%;top:calc(max(14px,env(safe-area-inset-top)) + 110px);transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;gap:10px;align-items:center;width:min(360px,calc(100% - 24px));pointer-events:none}
+.dm{pointer-events:auto;width:100%;text-align:left;border-radius:22px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:4px;overflow:hidden;cursor:pointer;
+  animation:dmin .6s cubic-bezier(.2,.9,.3,1.25),drift 5s ease-in-out .6s infinite}
+.dm.out{animation:dmout .35s ease forwards}
+@keyframes dmin{from{opacity:0;transform:translateY(-18px) scale(.9)}}
+@keyframes dmout{to{opacity:0;transform:translateY(-10px) scale(.94)}}
+.dm-from{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dm-from svg{width:12px;height:12px}
+.dm-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.dm-time{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--me);transform-origin:0 50%;animation:dmtime 10s linear forwards;z-index:3!important}
+@keyframes dmtime{to{transform:scaleX(0)}}
+/* confirmation dialog for anything that deletes */
+.confirm-wrap{z-index:11}
+.confirm{width:min(360px,100%);padding:22px 20px 18px;gap:10px;text-align:center}
+.confirm h2{margin:0;font-size:19px;line-height:24px;font-weight:700}
+.confirm p{margin:0 0 6px;font-size:15px;line-height:21px}
+.confirm .a-row{justify-content:center;gap:10px}
+.confirm .a-btn{height:42px;padding:0 20px;font-size:16px;flex:1}
+.a-btn.danger-fill{--tint:rgba(255,59,48,.88);color:#fff}
+/* admin posting in the chat */
+.who .admin-tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.55);padding:0 6px;border-radius:999px;line-height:15px}
+#me-pop .field{height:42px;padding:0 16px}
+/* admin history: private messages */
+.hist .bubble.pm{outline:1.5px dashed rgba(0,0,0,.28);outline-offset:2px}
+.hist .bubble.pm.sent{align-self:flex-end}
+.hist .meta.sent{align-self:flex-end;margin-right:10px}
+.pm-tag{font-size:11px;font-weight:600;color:#6B3FA0;background:rgba(150,90,220,.14);padding:2px 8px;border-radius:999px;white-space:nowrap}
 .tabs.four button{font-size:14px}
 @media (max-width:480px){ .tabs.four button{font-size:12.5px} }
 .ed-top .seg{height:32px}
@@ -438,7 +495,8 @@ body[data-screen=s-admin] .overlay{opacity:0}
     </button>
   </form>
   <p class="note stagger" style="--i:1" id="n-user">You cannot change your username or color</p>
-  <div class="shade glass pill stagger" style="--i:2">
+  <div class="rare-note glass pill stagger" style="--i:2" id="rare-note" hidden><div class="bubble glass tinted" id="rare-bub">Rare</div><span>You got a rare look</span></div>
+  <div class="shade glass pill stagger" style="--i:2" id="shade-box">
     <span class="shade-lbl">Your color</span>
     <input class="shade-range" id="shade-user" type="range" min="0" max="100" value="80" aria-label="Profile color, from greenish white to vibrant green">
     <span class="shade-dot" aria-hidden="true"></span>
@@ -450,6 +508,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
   <header class="chat-head staggerX" style="--i:0" id="chat-head">
     <div class="count" role="timer" aria-label="Time left"><b id="c-time"><span class="u">00</span><span class="sep">:</span><span class="u">00</span><span class="sep">:</span><span class="u">00</span><span class="sep">:</span><span class="u">00</span></b></div>
     <div class="head-row">
+      <button class="circle glass live mini" type="button" id="to-admin" aria-label="Admin panel" title="Admin panel" hidden><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
       <button class="logout" type="button" id="logout" aria-label="Log out" title="Log out">
         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
       </button>
@@ -471,6 +530,7 @@ body[data-screen=s-admin] .overlay{opacity:0}
     <header class="a-head stagger" style="--i:0">
       <h1>Admin</h1>
       <span class="a-muted" id="a-who"></span>
+      <button class="a-btn glass live" type="button" id="a-chat" title="Post in the chat as admin">Chat</button>
       <button class="a-btn glass live" type="button" id="a-exit">Log out</button>
     </header>
     <div class="a-body" id="a-body">
@@ -586,12 +646,88 @@ body[data-screen=s-admin] .overlay{opacity:0}
   </div>
 </section>
 
+<div class="pm-pop glass" id="pm-pop" hidden>
+  <div class="pm-head"><span class="dot" id="pm-dot"></span><b id="pm-name"></b>
+    <button class="a-btn sm glass live like-btn" type="button" id="pm-like" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.5 1.1 5.3 3 1.8-1.9 3.2-3 5.3-3 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg><span id="pm-like-n">0</span></button></div>
+  <form class="pm-form" id="pm-form" autocomplete="off">
+    <label class="field glass pill"><input id="pm-text" placeholder="Private message" maxlength="300" aria-label="Private message"></label>
+    <button class="circle glass live tinted send" type="submit" aria-label="Send privately"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+  </form>
+</div>
+<div class="dm-stack" id="dm-stack" aria-live="polite"></div>
+
+<div class="sheet-wrap" id="rare-wrap" hidden>
+  <div class="sheet glass" role="dialog" aria-modal="true" aria-labelledby="rare-title">
+    <div class="sheet-head"><span class="lab-badge rare-badge">Rare</span><h2 id="rare-title">Code</h2>
+      <button class="circle glass live mini" type="button" id="rare-close" aria-label="Close"><svg viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+    <p class="a-muted sheet-sub">Whoever claims this code gets this look. It can only be changed while the code is free.</p>
+    <div class="rare-body">
+      <div class="lab-preview" id="rare-preview" aria-hidden="true"></div>
+      <div class="ed-row"><span class="ed-lbl">Image</span>
+        <label class="a-btn sm glass live file-btn">Upload texture<input type="file" id="rare-file" accept="image/*" hidden></label>
+        <button class="a-btn sm glass live" type="button" id="rare-noimg">Remove</button></div>
+      <div class="ed-row"><span class="ed-lbl">Texture</span><input class="ed-range" id="rare-strength" type="range" min="0" max="100" aria-label="How much the texture shows"><span class="ed-val" id="rare-strength-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Color</span>
+        <div class="swatches" id="rare-tints">
+          <button type="button" class="sw" data-c="#FFD166" style="background:#FFD166" aria-label="Gold"></button>
+          <button type="button" class="sw" data-c="#F4A6FF" style="background:#F4A6FF" aria-label="Orchid"></button>
+          <button type="button" class="sw" data-c="#FF8FA3" style="background:#FF8FA3" aria-label="Rose"></button>
+          <button type="button" class="sw" data-c="#9BE7FF" style="background:#9BE7FF" aria-label="Ice"></button>
+          <button type="button" class="sw" data-c="#C3F584" style="background:#C3F584" aria-label="Lime"></button>
+          <button type="button" class="sw" data-c="#1C1C1E" style="background:#1C1C1E" aria-label="Black"></button>
+          <label class="sw custom" title="Any color"><input type="color" id="rare-tint" aria-label="Custom bubble color"></label>
+        </div></div>
+      <div class="ed-row"><span class="ed-lbl">Text</span>
+        <div class="swatches" id="rare-inks">
+          <button type="button" class="sw" data-c="#111111" style="background:#111" aria-label="Black text"></button>
+          <button type="button" class="sw" data-c="#FFFFFF" style="background:#fff" aria-label="White text"></button>
+          <button type="button" class="sw" data-c="#5A3B00" style="background:#5A3B00" aria-label="Brown text"></button>
+          <label class="sw custom" title="Any color"><input type="color" id="rare-ink" aria-label="Custom text color"></label>
+        </div></div>
+      <div class="ed-row"><span class="ed-lbl">Weight</span><input class="ed-range" id="rare-weight" type="range" min="0" max="6" step="1" aria-label="Font weight"><span class="ed-val" id="rare-weight-v"></span></div>
+      <div class="ed-row"><span class="ed-lbl">Round</span><input class="ed-range" id="rare-radius" type="range" min="0" max="30" aria-label="Roundness"><span class="ed-val" id="rare-radius-v"></span></div>
+      <div class="a-row wrap">
+        <button class="a-btn glass live danger" type="button" id="rare-remove">Make normal</button>
+        <span style="flex:1"></span>
+        <button class="a-btn glass green live" type="button" id="rare-save">Save rare code</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="hist-wrap" hidden>
   <div class="sheet glass" role="dialog" aria-modal="true" aria-labelledby="hist-title">
     <div class="sheet-head"><span class="dot" id="hist-dot"></span><h2 id="hist-title">History</h2>
       <button class="circle glass live mini" type="button" id="hist-close" aria-label="Close"><svg viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
     <p class="a-muted sheet-sub" id="hist-sub"></p>
     <div class="hist" id="hist-list"></div>
+  </div>
+</div>
+<div class="sheet-wrap confirm-wrap" id="cf-wrap" hidden>
+  <div class="sheet glass confirm" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-text">
+    <h2 id="cf-title"></h2>
+    <p class="a-muted" id="cf-text"></p>
+    <div class="a-row">
+      <button class="a-btn glass live" type="button" id="cf-no">Cancel</button>
+      <button class="a-btn glass live danger-fill" type="button" id="cf-ok">Delete</button>
+    </div>
+  </div>
+</div>
+<div class="shade-pop glass" id="me-pop" hidden>
+  <p class="pop-title">Chatting as admin: any name, any color</p>
+  <label class="field glass pill"><input id="me-name" maxlength="20" placeholder="Name" aria-label="Your name in the chat"></label>
+  <div class="swatches" id="me-tints">
+    <button type="button" class="sw" data-c="#1C1C1E" style="background:#1C1C1E" aria-label="Black"></button>
+    <button type="button" class="sw" data-c="#8E8E93" style="background:#8E8E93" aria-label="Grey"></button>
+    <button type="button" class="sw" data-c="#FF3B30" style="background:#FF3B30" aria-label="Red"></button>
+    <button type="button" class="sw" data-c="#FF9500" style="background:#FF9500" aria-label="Orange"></button>
+    <button type="button" class="sw" data-c="#AF52DE" style="background:#AF52DE" aria-label="Purple"></button>
+    <button type="button" class="sw" data-c="#FFFFFF" style="background:#fff" aria-label="White"></button>
+    <label class="sw custom" title="Any color"><input type="color" id="me-tint" aria-label="Any color"></label>
+  </div>
+  <div class="pop-row">
+    <div class="pop-prev" id="me-prev">This is you</div>
+    <button class="a-btn glass green live" type="button" id="me-save">Save</button>
   </div>
 </div>
 <div class="shade-pop glass" id="shade-pop" hidden>
@@ -616,6 +752,7 @@ const FIREBASE_CONFIG = { // public web config for the "Playlist Lobby" Firebase
 };
 const COUNTDOWN_TARGET = "2026-10-31T20:00:00+01:00"; // what the timer counts down to
 const LOCAL_CODES = ["1","2","3","4","5"]; // only used in offline demo mode (no Firebase)
+const ADMIN_ID = "_admin";                   // the account the admin posts in the chat with (can't be used as a login code)
 const ADMIN_CODE = "admin";                  // typing this in the code box logs in as admin (for this browser session only)
 const MESSAGE_TTL_HOURS = 4;                  // users only see messages newer than this; the admin sees all
 const DEFAULT_SHADE = 80;                     // profile colour for people who haven't picked one (0 = greenish white, 100 = vibrant green)
@@ -712,7 +849,7 @@ async function firebaseApi(cfg){
       // a code is valid only if the admin has created it
       if(/[\/]/.test(code) || code==="." || code==="..") return {valid:false};
       const snap = await fs.getDoc(codeRef(code));
-      return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade, kind:snap.data().kind||null} : {valid:false};
+      return snap.exists() ? {valid:true, username:snap.data().username||null, shade:snap.data().shade, kind:snap.data().kind||null, tint:snap.data().tint||null} : {valid:false};
     },
     async claim(code,name,shade){
       const lower=name.toLowerCase();
@@ -722,14 +859,19 @@ async function firebaseApi(cfg){
         if(!c.exists()) throw new Error("code");
         if(c.data().username) return {ok:false, existing:c.data().username};
         if(n.exists()) return {ok:false, taken:true};
-        tx.update(cRef,{username:name, claimedAt:fs.serverTimestamp(), shade});
+        tx.update(cRef,{username:name, claimedAt:fs.serverTimestamp(), ...(Number.isFinite(shade)?{shade}:{})}); // rare codes have no shade
         tx.set(nRef,{code});
         return {ok:true};
       });
     },
-    async send(code,username,text,shade,kind){
-      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,shade,...(kind==='blue'?{kind}:{}),ts:fs.serverTimestamp()});
+    async send(code,username,text,shade,kind,tint){
+      await fs.addDoc(fs.collection(db,"messages"),{code,username,text,...(Number.isFinite(shade)?{shade}:{}),...(kind==='blue'||kind==='rare'?{kind}:{}),...(kind==='admin'?{kind,tint}:{}),ts:fs.serverTimestamp()});
     },
+    async ensureAdmin(){ // the admin's chat account, created on first use
+      const r=codeRef(ADMIN_ID); if(!(await fs.getDoc(r)).exists()) await fs.setDoc(r,{username:null,kind:'admin'});
+      const d=(await fs.getDoc(r)).data(); return {username:d.username||null,tint:d.tint||null};
+    },
+    setAdminTint(tint){ return fs.updateDoc(codeRef(ADMIN_ID),{tint}); },
     setShade(code,shade){ return fs.updateDoc(codeRef(code),{shade}); },
     watch(cb){
       const q=fs.query(fs.collection(db,"messages"),fs.orderBy("ts","desc"),fs.limit(150));
@@ -749,7 +891,7 @@ async function firebaseApi(cfg){
     },
     watchCodes(cb){
       return fs.onSnapshot(fs.collection(db,"codes"),s=>cb(s.docs.map(d=>{const c=d.data();
-        return {code:d.id,username:c.username||null,shade:c.shade,kind:c.kind||null,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
+        return {code:d.id,username:c.username||null,shade:c.shade,kind:c.kind||null,tint:c.tint||null,claimedAt:c.claimedAt?c.claimedAt.toMillis():null};})),lost);
     },
     createCode(code,kind){ return fs.runTransaction(db,async tx=>{
       if((await tx.get(codeRef(code))).exists()) return false;
@@ -773,6 +915,22 @@ async function firebaseApi(cfg){
       return {ok:true}; }); },
     deleteMessage(id){ return fs.deleteDoc(fs.doc(db,"messages",id)); },
     setScreen(cfg){ return fs.setDoc(fs.doc(db,"site","screen"),{...cfg,ts:fs.serverTimestamp()}); },
+    // rare looks (one doc per code), private messages and likes
+    watchStyles(cb){ return fs.onSnapshot(fs.collection(db,"styles"),s=>{ const o={}; s.docs.forEach(d=>o[d.id]=d.data()); cb(o); },e=>console.error(e)); },
+    async setRare(code,st){ await fs.setDoc(fs.doc(db,"styles",code),st); await fs.updateDoc(codeRef(code),{kind:'rare'}); },
+    async clearRare(code){ await fs.updateDoc(codeRef(code),{kind:fs.deleteField()}); await fs.deleteDoc(fs.doc(db,"styles",code)); },
+    sendDM(o){ return fs.addDoc(fs.collection(db,"dms"),{...o,ts:fs.serverTimestamp()}); },
+    watchDMs(code,cb){ return fs.onSnapshot(fs.query(fs.collection(db,"dms"),fs.where("to","==",code)),s=>cb(s.docs.map(msgOut)),e=>console.error(e)); },
+    watchUserDMs(code,cb){ // sent and received, merged
+      let a=[],b=[]; const emit=()=>cb([...a,...b]);
+      const u1=fs.onSnapshot(fs.query(fs.collection(db,"dms"),fs.where("from","==",code)),s=>{a=s.docs.map(msgOut);emit();},lost);
+      const u2=fs.onSnapshot(fs.query(fs.collection(db,"dms"),fs.where("to","==",code)),s=>{b=s.docs.map(msgOut);emit();},lost);
+      return ()=>{u1();u2();};
+    },
+    deleteDM(id){ return fs.deleteDoc(fs.doc(db,"dms",id)); },
+    watchLikes(cb){ return fs.onSnapshot(fs.collection(db,"likes"),s=>cb(s.docs.map(d=>d.data())),e=>console.error(e)); },
+    like(from,to){ return fs.setDoc(fs.doc(db,"likes",from+"_"+to),{from,to,ts:fs.serverTimestamp()}); },
+    unlike(from,to){ return fs.deleteDoc(fs.doc(db,"likes",from+"_"+to)); },
     async clearMessages(){ // delete in batches (a batch holds at most 500 writes)
       let n=0;
       for(;;){
@@ -789,7 +947,7 @@ function localApi(){
   const load=()=>{ let d=null; try{d=JSON.parse(store.get(K))}catch{}
     d=d||{codes:{},msgs:[]};
     if(!d.v){ d.codes={...Object.fromEntries(LOCAL_CODES.map(c=>[c,null])),...d.codes}; d.v=2; } // seed the demo codes once
-    d.msgs=d.msgs||[]; d.screen=d.screen||""; d.shades=d.shades||{}; d.kinds=d.kinds||{}; return d; };
+    d.msgs=d.msgs||[]; d.screen=d.screen||""; d.shades=d.shades||{}; d.kinds=d.kinds||{}; d.styles=d.styles||{}; d.dms=d.dms||[]; d.likes=d.likes||{}; d.tints=d.tints||{}; return d; };
   const subs=new Set(), emit=()=>{const d=load(); subs.forEach(f=>f(d));};
   const save=d=>{store.set(K,JSON.stringify(d)); ch&&ch.postMessage(1); emit();};
   const sub=f=>{subs.add(f); f(load()); return ()=>subs.delete(f);};
@@ -797,12 +955,24 @@ function localApi(){
   const taken=(d,name,code)=>Object.entries(d.codes).some(([c,n])=>c!==code&&n&&n.toLowerCase()===name.toLowerCase());
   ch&&(ch.onmessage=emit); addEventListener("storage",e=>e.key===K&&emit());
   return {
-    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c],kind:d.kinds[c]||null}:{valid:false}; },
+    async checkCode(c){ const d=load(); return (c in d.codes)?{valid:true,username:d.codes[c],shade:d.shades[c],kind:d.kinds[c]||null,tint:d.tints[c]||null}:{valid:false}; },
     async claim(c,name,shade){ return mut(d=>{ d.shades[c]=shade; if(!(c in d.codes)) throw new Error("code");
       if(d.codes[c]) return {ok:false,existing:d.codes[c]};
       if(taken(d,name,c)) return {ok:false,taken:true};
       d.codes[c]=name; return {ok:true}; }); },
-    async send(code,username,text,shade,kind){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,shade,...(kind==='blue'?{kind}:{}),ts:Date.now()}); }); },
+    async send(code,username,text,shade,kind,tint){ mut(d=>{ d.msgs.push({id:Date.now()+""+Math.random(),code,username,text,...(Number.isFinite(shade)?{shade}:{}),...(kind==='blue'||kind==='rare'?{kind}:{}),...(kind==='admin'?{kind,tint}:{}),ts:Date.now()}); }); },
+    async ensureAdmin(){ return mut(d=>{ if(!(ADMIN_ID in d.codes)){ d.codes[ADMIN_ID]=null; d.kinds[ADMIN_ID]='admin'; } return {username:d.codes[ADMIN_ID],tint:d.tints[ADMIN_ID]||null}; }); },
+    async setAdminTint(t){ mut(d=>{ d.tints[ADMIN_ID]=t; }); },
+    watchStyles:cb=>sub(d=>cb(d.styles)),
+    async setRare(c,st){ mut(d=>{ d.styles[c]=st; d.kinds[c]='rare'; }); },
+    async clearRare(c){ mut(d=>{ delete d.styles[c]; delete d.kinds[c]; }); },
+    async sendDM(o){ mut(d=>{ d.dms.push({...o,id:'dm'+Date.now()+Math.random(),ts:Date.now()}); }); },
+    watchDMs:(code,cb)=>sub(d=>cb(d.dms.filter(x=>x.to===code))),
+    watchUserDMs:(code,cb)=>sub(d=>cb(d.dms.filter(x=>x.to===code||x.from===code))),
+    async deleteDM(id){ mut(d=>{ d.dms=d.dms.filter(x=>x.id!==id); }); },
+    watchLikes:cb=>sub(d=>cb(Object.values(d.likes))),
+    async like(from,to){ mut(d=>{ d.likes[from+'_'+to]={from,to,ts:Date.now()}; }); },
+    async unlike(from,to){ mut(d=>{ delete d.likes[from+'_'+to]; }); },
     async setShade(c,shade){ mut(d=>{ d.shades[c]=shade; }); },
     async clearMessages(){ return mut(d=>{ const n=d.msgs.length; d.msgs=[]; return n; }); },
     watch:cb=>sub(d=>cb(d.msgs.slice(-150))),
@@ -810,7 +980,7 @@ function localApi(){
     watchScreen:cb=>sub(d=>cb(d.screen)),
     watchAll:cb=>sub(d=>cb(d.msgs.slice().reverse())),
     watchUser:(code,cb)=>sub(d=>cb(d.msgs.filter(m=>m.code===code))),
-    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],kind:d.kinds[code]||null,claimedAt:null})))),
+    watchCodes:cb=>sub(d=>cb(Object.entries(d.codes).map(([code,username])=>({code,username,shade:d.shades[code],kind:d.kinds[code]||null,tint:d.tints[code]||null,claimedAt:null})))),
     async createCode(c,kind){ return mut(d=>{ if(c in d.codes) return false; d.codes[c]=null; if(kind==='blue') d.kinds[c]=kind; return true; }); },
     async resetCode(c){ mut(d=>{ if(c in d.codes) d.codes[c]=null; delete d.shades[c]; }); },
     async deleteCode(c){ mut(d=>{ delete d.codes[c]; delete d.shades[c]; delete d.kinds[c]; }); },
@@ -832,7 +1002,8 @@ function go(id){
   setTimeout(()=>{prev.hidden=true;},350);
   next.hidden=false; next.classList.remove('enter'); void next.offsetWidth; next.classList.add('enter'); // replay the staggered entrance
   requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.remove('out')));
-  current=next; layoutChat(); closeShadePop();
+  current=next; layoutChat(); closeShadePop(); closePM(); closeMePop();
+  if(id==='s-user') prepUserScreen();
 }
 const shake=el=>{el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');};
 
@@ -846,13 +1017,46 @@ function shadeOf(v,kind){
   return {bg:`hsl(${h},${s}%,${l}%)`, tint:`hsla(${h},${s}%,${l}%,${blue?.46:.8})`, soft:`hsla(${h},${s}%,${Math.min(l+8,90)}%,.6)`,
     ink:blue?'#0B2A4A':(l<56?'#fff':'#0E3B1C')}; // blue glass is clearer, so its text stays dark
 }
+/* rare looks, kept live for everyone */
+let styles={};
+const hexA=(hex,a)=>{ const n=parseInt((hex||'#FFFFFF').slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+function rareLook(code){
+  const st=styles[code]; if(!st) return null;
+  // only embedded images are used as texture (never an outside address)
+  if(st.texture&&!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(st.texture)) st.texture=null;
+  const strength=st.texture?(Number.isFinite(st.strength)?st.strength:.6):0;
+  return {bg:st.tint, tint:hexA(st.tint, st.texture?1-.85*strength:.82), soft:hexA(st.tint,.55), ink:st.ink||'#111',
+    rare:true, weight:st.weight||400, radius:Number.isFinite(st.radius)?st.radius:23, texture:st.texture||null};
+}
+// the look of one account's bubbles: its rare design, or its green/blue shade
+function adminLook(hex){ // any colour; text turns dark or light for contrast
+  hex=/^#[0-9a-f]{6}$/i.test(hex||'')?hex:'#8E8E93';
+  const n=parseInt(hex.slice(1),16), lum=(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255;
+  return {bg:hex, tint:hexA(hex,.82), soft:hexA(hex,.5), ink:lum>.6?'#111':'#fff'};
+}
+const lookOf=(code,shade,kind,tint)=>kind==='admin'?adminLook(tint):((kind==='rare'&&rareLook(code))||shadeOf(shade,kind));
+function paint(el,look,kind,id){
+  el.classList.toggle('blue',kind==='blue'); el.classList.toggle('rare',!!look.rare);
+  el.style.setProperty('--tint',look.tint); el.style.color=look.ink;
+  el.style.fontWeight=look.rare?look.weight:''; el.style.borderRadius=look.rare?look.radius+'px':'';
+  if(look.rare) el.style.setProperty('--tex',look.texture?`url("${look.texture}")`:'none'); else el.style.removeProperty('--tex');
+  if(kind==='blue'&&id) el.style.setProperty('--fd',floatDelay(id));
+}
 function applyMyShade(v){
-  const c=shadeOf(v,me.kind), r=document.documentElement.style;
+  const c=lookOf(me.code,v,me.kind,me.tint), r=document.documentElement.style;
   document.querySelectorAll('.shade-range').forEach(x=>x.classList.toggle('blue',me.kind==='blue'));
   r.setProperty('--me',c.bg); r.setProperty('--me-tint',c.tint); r.setProperty('--me-soft',c.soft); r.setProperty('--me-ink',c.ink);
 }
 // hasShade: the colour is saved on the account and can no longer change
-const setMe=(code,username,shade,kind)=>{ const has=Number.isFinite(shade); me={code,username,shade:has?shade:DEFAULT_SHADE,hasShade:has,kind:kind||null}; applyMyShade(me.shade); };
+// rare accounts never pick a shade, so they count as "has one"
+const setMe=(code,username,shade,kind)=>{ const has=Number.isFinite(shade); me={code,username,shade:has?shade:DEFAULT_SHADE,hasShade:has||kind==='rare',kind:kind||null}; applyMyShade(me.shade); };
+// username screen: rare codes show their look instead of the colour slider
+function prepUserScreen(){
+  const rare=me.kind==='rare'&&rareLook(me.code);
+  $('shade-box').hidden=!!rare; $('rare-note').hidden=!rare;
+  if(rare) paint($('rare-bub'),rare,'rare');
+  $('n-user').textContent=rare?'You cannot change your username':'You cannot change your username or color';
+}
 applyMyShade(DEFAULT_SHADE);
 // username screen: pick before locking
 $('shade-user').addEventListener('input',e=>{ me.shade=+e.target.value; applyMyShade(me.shade); });
@@ -863,6 +1067,7 @@ function closeShadePop(){
   if(!me.hasShade){ me.shade=DEFAULT_SHADE; applyMyShade(me.shade); render(lastList); } // not locked: drop the preview
 }
 $('me-color').addEventListener('click',()=>{
+  if(me.kind==='admin') return $('me-pop').hidden?openMePop():closeMePop();
   const p=$('shade-pop'); if(!p.hidden) return closeShadePop();
   const h=$('chat-head'); p.style.top=(h.offsetTop+h.offsetHeight+8)+'px';
   $('shade-chat').value=me.shade; p.hidden=false;
@@ -874,6 +1079,34 @@ $('shade-lock').addEventListener('click',async()=>{
   try{ await api.setShade(me.code,me.shade); me.hasShade=true; $('shade-pop').hidden=true; $('me-color').hidden=true; toast('Color locked to your account.'); }
   catch(err){ fail('lock your color')(err); }
 });
+
+// admin in the chat: name and colour can change any time
+let meDraft='#8E8E93';
+function drawMePop(){
+  const l=adminLook(meDraft), pv=$('me-prev'); pv.style.background=l.tint; pv.style.color=l.ink;
+  document.querySelectorAll('#me-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===meDraft));
+  $('me-tint').value=meDraft.toLowerCase();
+}
+function openMePop(){
+  const p=$('me-pop'), h=$('chat-head'); p.style.top=(h.offsetTop+h.offsetHeight+8)+'px';
+  $('me-name').value=me.username||''; meDraft=me.tint||'#8E8E93'; drawMePop(); p.hidden=false;
+  setTimeout(()=>$('me-name').focus(),60);
+}
+function closeMePop(){ $('me-pop').hidden=true; }
+document.querySelectorAll('#me-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ meDraft=b.dataset.c; drawMePop(); }));
+$('me-tint').addEventListener('input',e=>{ meDraft=e.target.value.toUpperCase(); drawMePop(); });
+$('me-name').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('me-save').click(); } });
+$('me-save').addEventListener('click',async()=>{
+  const name=$('me-name').value.trim();
+  if(!NAME_RE.test(name)){ toast('Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'); return shake($('me-pop')); }
+  try{
+    if(name!==me.username){ const r=await api.renameCode(ADMIN_ID,name); if(!r.ok){ toast('That name is taken.'); return shake($('me-pop')); } }
+    if(meDraft!==me.tint) await api.setAdminTint(meDraft);
+    me.username=name; me.tint=meDraft; applyMyShade(); render(lastList); closeMePop(); toast('Saved.');
+  }catch(err){ console.error(err); toast("Couldn't save. Try again."); }
+});
+document.addEventListener('pointerdown',e=>{ if(!$('me-pop').hidden && !e.target.closest('#me-pop,#me-color')) closeMePop(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMePop(); });
 
 /* ---------- chat layout: the conversation starts under the clock header, whatever its size ---------- */
 function layoutChat(){
@@ -919,6 +1152,13 @@ if(window.visualViewport){
   };
   vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit);
 }
+api.watchStyles(o=>{
+  styles=o||{};
+  applyMyShade(me.shade);
+  if(current.id==='s-user') prepUserScreen();
+  if(current.id==='chat') render(lastList);
+  if(adminOn){ renderCodes(codeList); drawMock(); }
+});
 api.watchScreen(v=>{
   const c=normScreen(v); if(JSON.stringify(c)===JSON.stringify(screenCfg)) return;
   const changedText=!screenCfg||!c||c.text!==screenCfg.text;
@@ -934,6 +1174,7 @@ $('f-code').addEventListener('submit',async e=>{
   const code=$('code').value.trim(); const note=$('n-code');
   if(!code) return shake($('f-code'));
   if(isAdminCode(code)){ $('code').value=''; note.textContent=''; return openAdmin(); }
+  if(code.toLowerCase()===ADMIN_ID){ note.className='note err'; note.textContent="That code doesn't work."; return shake($('f-code')); }
   session.del('playlist-admin'); // signing in with a code ends any admin session
   note.className='note'; note.textContent='Checking…';
   try{
@@ -953,7 +1194,7 @@ $('f-user').addEventListener('submit',async e=>{
   if(!NAME_RE.test(name)){ note.className='note err'; note.textContent='Use 2–20 letters, numbers, spaces, dots, dashes or underscores.'; return shake($('f-user')); }
   $('lock').disabled=true;
   try{
-    const r=await api.claim(me.code,name,me.shade);
+    const r=await api.claim(me.code,name,me.kind==='rare'?undefined:me.shade);
     if(r.taken){ note.className='note err'; note.textContent='That username is taken. Pick another.'; shake($('f-user')); return; }
     if(r.existing){ me.username=r.existing; toast(`This code is already ${r.existing}.`); return openChat(); }
     me.username=name; me.hasShade=true; locked=true;
@@ -969,19 +1210,23 @@ function resetUserStep(){
   locked=false; $('uname').value=''; $('uname').readOnly=false;
   $('ic-open').hidden=false; $('ic-closed').hidden=true; $('lock').setAttribute('aria-label','Lock username'); $('lock').classList.remove('locked');
   $('next').classList.remove('on'); $('next').tabIndex=-1;
-  const n=$('n-user'); n.className='note'; n.textContent='You cannot change your username or color';
+  const n=$('n-user'); n.className='note'; prepUserScreen();
 }
 
 /* ---------- 3. chat ---------- */
 let unwatch=null, unwatchMe=null;
 function openChat(){
-  go('chat'); startCountdown(); applyMyShade(me.shade); $('me-color').hidden=me.hasShade;
+  go('chat'); startCountdown(); applyMyShade(me.shade);
+  const asAdmin=me.kind==='admin'; $('me-color').hidden=me.hasShade&&!asAdmin; $('to-admin').hidden=!asAdmin;
+  $('me-color').title=asAdmin?'Your name and color':'Pick your color';
   if(!unwatch) unwatch=api.watch(render); else render(lastList); // re-render so "mine" matches the account that just logged in
   if(!unwatchMe) unwatchMe=api.watchCode(me.code,onMyCode);
+  watchMyDMs();
   setTimeout(()=>$('msg').focus(),360);
 }
 // log out: forget the code on this browser. Logging back in with the same code keeps the username.
 $('logout').addEventListener('click',()=>{
+  if(me.kind==='admin') return adminLogout(); // × while chatting as admin ends the admin session
   logOutUser();
   $('code').value=''; $('n-code').textContent='';
   go('s-code'); setTimeout(()=>$('code').focus(),360);
@@ -989,6 +1234,7 @@ $('logout').addEventListener('click',()=>{
 // the admin can rename, reset or delete this browser's account while it is open
 function onMyCode(name){
   if(!me.code) return;
+  if(me.kind==='admin'){ if(name!==undefined) me.username=name; return; } // the admin's own chat account
   if(name===undefined){
     unwatchMe&&unwatchMe(); unwatchMe=null;
     store.del('playlist-code'); setMe(null,null); resetUserStep();
@@ -1018,7 +1264,7 @@ const floatDelay=id=>{ let h=0; for(const ch of String(id)) h=(h*31+ch.charCodeA
 function render(all){
   lastList=all; const list=fresh(all); shownCount=list.length;
   const latest={}; for(const m of all) if(Number.isFinite(m.shade)) latest[m.code]=m.shade; // a person's newest colour applies to all their bubbles
-  const kindOf={}; for(const m of all) if(m.kind) kindOf[m.code]=m.kind;
+  const kindOf={}, tintOf={}; for(const m of all){ if(m.kind) kindOf[m.code]=m.kind; if(m.tint) tintOf[m.code]=m.tint; }
   const log=$('log'); const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<60;
   log.replaceChildren(Object.assign(document.createElement('div'),{className:'spacer'}));
   if(!list.length){ log.append(Object.assign(document.createElement('p'),{className:'empty',textContent:'No messages yet. Say hi.'})); return; }
@@ -1026,16 +1272,18 @@ function render(all){
   for(const m of list){
     if(!prev || m.ts-prev.ts>15*60e3) log.append(Object.assign(document.createElement('div'),{className:'stamp',textContent:fmtDay(m.ts)}));
     const mine=m.code===me.code;
-    const kind=mine?me.kind:kindOf[m.code], c=shadeOf(mine?me.shade:latest[m.code],kind);
+    const kind=mine?me.kind:kindOf[m.code], c=mine?lookOf(me.code,me.shade,me.kind,me.tint):lookOf(m.code,latest[m.code],kind,tintOf[m.code]);
     if(!mine && (!prev || prev.code!==m.code)){
       const who=document.createElement('div'), dot=document.createElement('i'); who.className='who';
-      dot.style.background=c.bg; who.append(dot,m.username); log.append(who);
+      dot.style.background=c.bg; who.append(dot,m.username); if(kind==='admin') who.append(mk('span','admin-tag','admin'));
+      who.append(mk('span','likes',String(likeCount[m.code]||0))); log.append(who);
     }
     const b=document.createElement('div');
-    b.className='bubble glass tinted'+(mine?' mine':'')+(kind==='blue'?' blue':'')+(!firstRender&&!seenMsgs.has(m.id)?' new':'');
-    b.style.setProperty('--tint',c.tint); b.style.color=c.ink;
-    if(kind==='blue') b.style.setProperty('--fd',floatDelay(m.id));
-    b.textContent=m.text; b.title=fmtTime(m.ts);
+    b.className='bubble glass tinted'+(mine?' mine':' other')+(!firstRender&&!seenMsgs.has(m.id)?' new':'');
+    paint(b,c,kind,m.id);
+    if(!mine){ b.dataset.code=m.code; b.dataset.name=m.username; b.dataset.kind=kind||''; b.dataset.shade=latest[m.code]??''; b.dataset.tint=tintOf[m.code]||''; b.title='Tap to like or message privately'; }
+    else b.title=fmtTime(m.ts);
+    b.textContent=m.text;
     log.append(b); prev=m; seenMsgs.add(m.id);
   }
   firstRender=false;
@@ -1044,14 +1292,82 @@ function render(all){
 let sending=false;
 $('f-msg').addEventListener('submit',async e=>{
   e.preventDefault(); const t=$('msg').value.trim(); if(!t||sending) return;
+  if(me.kind==='admin'&&!me.username){ openMePop(); return toast('Pick a name first.'); }
   sending=true;
   const sb=document.querySelector('#f-msg .send'); sb.classList.remove('launch'); void sb.offsetWidth; sb.classList.add('launch');
-  try{ await api.send(me.code,me.username,t,me.shade,me.kind); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
+  try{ await api.send(me.code,me.username,t,me.kind==='rare'||me.kind==='admin'?undefined:me.shade,me.kind,me.tint); $('msg').value=''; $('f-msg').classList.remove('has-text'); $('log').scrollTop=$('log').scrollHeight; }
   catch(err){ console.error(err); toast("Message not sent. Try again."); }
   finally{ sending=false; }
 });
 
 $('msg').addEventListener('input',()=>$('f-msg').classList.toggle('has-text',!!$('msg').value.trim()));
+
+/* ---------- likes ---------- */
+let likeCount={}, myLikes=new Set(), pmTo=null; // pmTo: whose bubble was tapped (set before the like watcher can fire)
+api.watchLikes(list=>{
+  likeCount={}; myLikes=new Set();
+  for(const l of list){ likeCount[l.to]=(likeCount[l.to]||0)+1; if(me.code&&l.from===me.code) myLikes.add(l.to); }
+  if(current.id==='chat') render(lastList);
+  if(adminOn) renderCodes(codeList);
+  if(pmTo) syncLike();
+});
+
+/* ---------- tap someone else's bubble: like them, or send a private message ---------- */
+$('log').addEventListener('click',e=>{
+  const b=e.target.closest('.bubble.other'); if(!b||!me.code) return;
+  openPM({code:b.dataset.code,name:b.dataset.name,kind:b.dataset.kind||null,shade:b.dataset.shade===''?null:+b.dataset.shade,tint:b.dataset.tint||null},b.getBoundingClientRect());
+});
+function openPM(to,r){
+  pmTo=to; const p=$('pm-pop');
+  $('pm-name').textContent=to.name; $('pm-dot').style.background=lookOf(to.code,to.shade,to.kind,to.tint).bg;
+  $('pm-text').value=''; syncLike(); p.hidden=false;
+  const w=p.offsetWidth, h=p.offsetHeight, left=Math.min(innerWidth-w-12,Math.max(12,r.left));
+  const top=r.bottom+8+h<innerHeight-90 ? r.bottom+8 : Math.max(12,r.top-h-8);
+  p.style.left=left+'px'; p.style.top=top+'px';
+  setTimeout(()=>$('pm-text').focus(),50);
+}
+function closePM(){ pmTo=null; $('pm-pop').hidden=true; }
+function syncLike(){
+  if(!pmTo) return; const on=myLikes.has(pmTo.code), btn_=$('pm-like');
+  btn_.setAttribute('aria-pressed',on); btn_.setAttribute('aria-label',on?`Unlike ${pmTo.name}`:`Like ${pmTo.name}`);
+  $('pm-like-n').textContent=likeCount[pmTo.code]||0;
+}
+$('pm-like').addEventListener('click',async()=>{
+  if(!pmTo||!me.code) return; const to=pmTo.code, on=myLikes.has(to), b=$('pm-like');
+  b.classList.remove('pop'); void b.offsetWidth; if(!on) b.classList.add('pop');
+  try{ on ? await api.unlike(me.code,to) : await api.like(me.code,to); }
+  catch(err){ console.error(err); toast("Couldn't save the like. Try again."); }
+});
+$('pm-form').addEventListener('submit',async e=>{
+  e.preventDefault(); const text=$('pm-text').value.trim(); if(!text||!pmTo) return;
+  const to=pmTo;
+  try{ await api.sendDM({from:me.code,fromName:me.username,to:to.code,toName:to.name,text}); closePM(); toast(`Sent privately to ${to.name}.`); }
+  catch(err){ console.error(err); toast("Private message not sent. Try again."); }
+});
+document.addEventListener('pointerdown',e=>{ if(!$('pm-pop').hidden && !e.target.closest('#pm-pop,.bubble.other')) closePM(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closePM(); });
+
+/* ---------- incoming private messages: float in, go after 10 s or when tapped ---------- */
+let dmUnsub=null;
+const dmSeenKey=()=>'playlist-dm-seen-'+me.code;
+function watchMyDMs(){
+  dmUnsub&&dmUnsub();
+  let seen; try{ seen=new Set(JSON.parse(store.get(dmSeenKey())||'[]')); }catch{ seen=new Set(); }
+  dmUnsub=api.watchDMs(me.code,list=>{
+    const fresh_=list.filter(d=>!seen.has(d.id)&&Date.now()-d.ts<24*3600e3).sort((a,b)=>a.ts-b.ts);
+    fresh_.forEach((d,i)=>{ seen.add(d.id); setTimeout(()=>showDM(d),i*400); });
+    if(fresh_.length) store.set(dmSeenKey(),JSON.stringify([...seen].slice(-300)));
+  });
+}
+function showDM(d){
+  const card=mk('button','dm glass'); card.type='button'; card.setAttribute('aria-label',`Private message from ${d.fromName}. Tap to close.`);
+  const from=mk('span','dm-from'); from.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>');
+  from.append('Private from '+d.fromName);
+  card.append(from,mk('span','dm-text',d.text),mk('span','dm-time'));
+  const bye=()=>{ if(card.classList.contains('out')) return; card.classList.add('out'); setTimeout(()=>card.remove(),350); };
+  card.addEventListener('click',bye); setTimeout(bye,10000);
+  $('dm-stack').append(card);
+}
 
 /* ---------- countdown: each unit ticks in when it changes ---------- */
 let tick; const units=[...document.querySelectorAll('#c-time .u')];
@@ -1072,16 +1388,30 @@ function startCountdown(){
 const mk=(tag,cls,text)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;};
 const btn=(label,cls,fn)=>{const b=mk('button','a-btn sm glass live '+(cls||''),label); b.type='button'; fn&&b.addEventListener('click',fn); return b;};
 // destructive buttons ask "Sure?" on the first tap (no confirm() popup; it can be blocked inside an iframe)
-const twoStep=(b,fn)=>{ const label=b.textContent; let armed=false,t;
+// every delete is double-checked in a dialog (not confirm(): that can be blocked inside an iframe)
+function confirmBox(title,text,ok){
+  return new Promise(res=>{
+    $('cf-title').textContent=title; $('cf-text').textContent=text||"This can't be undone."; $('cf-ok').textContent=ok||'Delete';
+    $('cf-wrap').hidden=false; setTimeout(()=>$('cf-no').focus(),40);
+    const key=e=>{ if(e.key==='Escape'){ e.stopPropagation(); done(false); } };
+    const done=v=>{ $('cf-wrap').hidden=true; $('cf-ok').onclick=$('cf-no').onclick=$('cf-wrap').onclick=null; document.removeEventListener('keydown',key,true); res(v); };
+    $('cf-ok').onclick=()=>done(true); $('cf-no').onclick=()=>done(false);
+    $('cf-wrap').onclick=e=>{ if(e.target===$('cf-wrap')) done(false); };
+    document.addEventListener('keydown',key,true);
+  });
+}
+// ask: {title,text,ok} or a function returning one (for counts that change)
+const twoStep=(b,fn,ask)=>{ const label=b.textContent;
   b.addEventListener('click',async()=>{
-    if(!armed){ armed=true; b.textContent='Sure?'; t=setTimeout(()=>{armed=false;b.textContent=label;},3000); return; }
-    clearTimeout(t); armed=false; b.textContent=label; await fn(); }); return b; };
+    const a=(typeof ask==='function'?ask():ask)||{};
+    if(await confirmBox(a.title||`${label}?`,a.text,a.ok||label)) await fn();
+  }); return b; };
 const fail=(what)=>err=>{ console.error(err); toast(`Couldn't ${what}. Try again.`); };
 
 let adminUnsubs=[];
 // admin is a separate login: it signs out the code account on this browser and lasts for this browser session
 function logOutUser(){
-  unwatchMe&&unwatchMe(); unwatchMe=null;
+  unwatchMe&&unwatchMe(); unwatchMe=null; dmUnsub&&dmUnsub(); dmUnsub=null; closePM();
   store.del('playlist-code'); setMe(null,null); resetUserStep();
 }
 function openAdmin(){
@@ -1091,12 +1421,21 @@ function openAdmin(){
   adminOn=true; $('a-who').textContent=''; syncScreenTab(true);
   adminUnsubs.push(api.watchAll(renderAdminMsgs), api.watchCodes(renderCodes));
 }
-$('a-exit').addEventListener('click',()=>{ closeHistory();
+function adminLogout(){
+  closeHistory(); closeRare();
   adminOn=false; adminUnsubs.forEach(u=>u&&u()); adminUnsubs=[];
   codeRows.clear(); $('a-codes').replaceChildren(); $('a-msgs').replaceChildren();
-  session.del('playlist-admin'); $('code').value='';
+  logOutUser(); session.del('playlist-admin'); $('code').value='';
   go('s-code'); toast('Logged out of admin.');
+}
+$('a-exit').addEventListener('click',adminLogout);
+// post in the chat as the admin, with a free name and colour
+$('a-chat').addEventListener('click',async()=>{
+  let a; try{ a=await api.ensureAdmin(); }catch(err){ return fail('open the chat')(err); }
+  me={code:ADMIN_ID,username:a.username,shade:DEFAULT_SHADE,hasShade:true,kind:'admin',tint:a.tint||'#8E8E93'};
+  openChat(); if(!me.username) setTimeout(openMePop,450);
 });
+$('to-admin').addEventListener('click',()=>openAdmin());
 
 const tabs=[...document.querySelectorAll('.tabs button')];
 // slide the selection pill under the selected tab / filter
@@ -1136,8 +1475,7 @@ function drawMock(){
   const recent=fresh(adminMsgs).slice(0,4).reverse(); // adminMsgs is newest first
   (recent.length?recent:[{code:'a',username:'Someone',text:'Chat messages show here',shade:72}]).forEach(x=>{
     if(!prev||prev.code!==x.code) log.append(mk('div','m-who',x.username));
-    const c=shadeOf(x.shade,x.kind), b=mk('div','m-b glass tinted'+(x.kind==='blue'?' blue':''),x.text);
-    b.style.setProperty('--tint',c.tint); b.style.color=c.ink; log.append(b); prev=x;
+    const b=mk('div','m-b glass tinted',x.text); paint(b,lookOf(x.code,x.shade,x.kind,x.tint),x.kind); log.append(b); prev=x;
   });
   const bar=mk('div','m-bar'); bar.append(mk('div','m-field glass','Message'),mk('div','m-send glass'));
   m.replaceChildren(clock,log,bar);
@@ -1256,20 +1594,26 @@ function codeRow(code){
       toast(`Code ${code} is now ${name}.`); inp.blur(); }
     catch(err){ fail('save the username')(err); }
   });
-  const reset=twoStep(btn('Reset'),()=>api.resetCode(code).then(()=>toast(`Code ${code} can pick a new username.`),fail('reset')));
-  const del=twoStep(btn('Delete','danger'),()=>api.deleteCode(code).then(()=>toast(`Code ${code} deleted.`),fail('delete the code')));
+  const reset=twoStep(btn('Reset'),()=>api.resetCode(code).then(()=>toast(`Code ${code} can pick a new username.`),fail('reset')),
+    ()=>({title:`Reset ${cur||'this account'}?`,text:`Code ${code} keeps working, but its username and color are cleared so a new one can be picked.`,ok:'Reset'}));
+  const del=twoStep(btn('Delete','danger'),()=>api.deleteCode(code).then(()=>toast(`Code ${code} deleted.`),fail('delete the code')),
+    ()=>({title:`Delete code ${code}?`,text:cur?`${cur} will be logged out and the code stops working. This can't be undone.`:"The code stops working. This can't be undone."}));
   inp.addEventListener('input',dirty);
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(!save.hidden) save.click(); }
     if(e.key==='Escape'){ inp.value=cur||''; dirty(); inp.blur(); } });
   const mid=mk('div','acct-mid'), acts=mk('div','acct-acts');
   const hist=btn('History','',()=>openHistory(code,cur));
-  mid.append(inp,when); acts.append(hist,save,reset,del); el.append(chip,mid,acts);
+  const rareB=btn('Make rare','',()=>openRare(code)); // only for free codes
+  mid.append(inp,when); acts.append(rareB,hist,save,reset,del); el.append(chip,mid,acts);
   return { el, update(c){
     cur=c.username; if(document.activeElement!==inp) inp.value=cur||'';
     el.classList.toggle('free',!cur); el.classList.toggle('fresh',fresh_.has(code));
-    chip.classList.toggle('blue',c.kind==='blue'); chip.title=c.kind==='blue'?'Blue code (experimental) · copy':'Copy code';
-    const dot=mk('span','dot'); if(cur) dot.style.background=shadeOf(c.shade,c.kind).bg;
-    when.replaceChildren(dot, cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet');
+    chip.classList.toggle('blue',c.kind==='blue'); chip.classList.toggle('rare',c.kind==='rare');
+    chip.title=c.kind==='blue'?'Blue code (experimental) · copy':c.kind==='rare'?'Rare code · copy':'Copy code';
+    rareB.hidden=!!cur; rareB.textContent=c.kind==='rare'?'Edit rare':'Make rare';
+    const dot=mk('span','dot'); if(cur||c.kind==='rare') dot.style.background=lookOf(code,c.shade,c.kind).bg;
+    const lk=likeCount[code]||0;
+    when.replaceChildren(dot, (cur ? (c.claimedAt?'Claimed '+fmtDay(c.claimedAt):'Claimed') : 'Not claimed yet')+(lk?` · ${lk} like${lk===1?'':'s'}`:''));
     reset.disabled=!cur; dirty(); } };
 }
 function countTo(el,to){ // numbers roll to their new value
@@ -1278,8 +1622,9 @@ function countTo(el,to){ // numbers roll to their new value
     el.textContent=Math.round(from+(to-from)*e); if(k<1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
-function renderCodes(list){
-  codeList=list; syncLab();
+function renderCodes(all){
+  codeList=all; syncLab();
+  const list=all.filter(c=>c.code!==ADMIN_ID); // the admin's chat account isn't a login code
   list.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const box=$('a-codes'), seen=new Set(), claimed=list.filter(c=>c.username).length;
   countTo($('st-total'),list.length); countTo($('st-claimed'),claimed); countTo($('st-free'),list.length-claimed);
@@ -1330,34 +1675,105 @@ function syncLab(){
   });
 })();
 
+/* rare code designer (free codes only) */
+const rd={texture:null,strength:.6,tint:'#FFD166',ink:'#111111',weight:400,radius:23}; let rdCode=null;
+function drawRare(){
+  const box=$('rare-preview'); box.replaceChildren();
+  const look=rareLookFrom(rd);
+  [['This is the rare look',null],['Only one person gets it',null]].forEach(([t])=>{ const b=mk('div','bubble glass tinted',t); paint(b,look,'rare'); box.append(b); });
+  $('rare-strength').value=Math.round(rd.strength*100); $('rare-strength-v').textContent=rd.texture?Math.round(rd.strength*100)+'%':'No image';
+  $('rare-strength').disabled=!rd.texture; $('rare-noimg').disabled=!rd.texture;
+  const wi=WEIGHTS.findIndex(w=>w[0]===rd.weight); $('rare-weight').value=wi; $('rare-weight-v').textContent=WEIGHTS[wi][1];
+  $('rare-radius').value=rd.radius; $('rare-radius-v').textContent=rd.radius+' px';
+  document.querySelectorAll('#rare-tints .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===rd.tint));
+  document.querySelectorAll('#rare-inks .sw[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===rd.ink));
+  $('rare-tint').value=rd.tint.toLowerCase(); $('rare-ink').value=rd.ink.toLowerCase();
+}
+function rareLookFrom(st){ const keep=styles; styles={_:st}; const l=rareLook('_'); styles=keep; return l; }
+function openRare(code){
+  rdCode=code; const c=codeList.find(x=>x.code===code); const st=styles[code];
+  Object.assign(rd,{texture:null,strength:.6,tint:'#FFD166',ink:'#111111',weight:400,radius:23},st||{});
+  $('rare-title').textContent=`Code ${code}`; $('rare-remove').hidden=!(c&&c.kind==='rare');
+  drawRare(); $('rare-wrap').hidden=false;
+}
+function closeRare(){ rdCode=null; $('rare-wrap').hidden=true; $('rare-file').value=''; }
+$('rare-close').addEventListener('click',closeRare);
+$('rare-wrap').addEventListener('click',e=>{ if(e.target===$('rare-wrap')) closeRare(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('rare-wrap').hidden) closeRare(); });
+// the image is shrunk and stored as a small JPEG in the database (no separate file storage needed)
+async function toTexture(file){
+  const img=await createImageBitmap(file), k=Math.min(1,360/Math.max(img.width,img.height));
+  const cv=document.createElement('canvas'); cv.width=Math.max(1,Math.round(img.width*k)); cv.height=Math.max(1,Math.round(img.height*k));
+  cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  let q=.8, url=cv.toDataURL('image/jpeg',q); while(url.length>250000&&q>.3){ q-=.15; url=cv.toDataURL('image/jpeg',q); }
+  return url;
+}
+$('rare-file').addEventListener('change',async e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  try{ rd.texture=await toTexture(f); drawRare(); }catch(err){ console.error(err); toast("Couldn't read that image. Try a JPG or PNG."); }
+});
+$('rare-noimg').addEventListener('click',()=>{ rd.texture=null; $('rare-file').value=''; drawRare(); });
+$('rare-strength').addEventListener('input',e=>{ rd.strength=+e.target.value/100; drawRare(); });
+$('rare-weight').addEventListener('input',e=>{ rd.weight=WEIGHTS[+e.target.value][0]; drawRare(); });
+$('rare-radius').addEventListener('input',e=>{ rd.radius=+e.target.value; drawRare(); });
+document.querySelectorAll('#rare-tints .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ rd.tint=b.dataset.c; drawRare(); }));
+document.querySelectorAll('#rare-inks .sw[data-c]').forEach(b=>b.addEventListener('click',()=>{ rd.ink=b.dataset.c; drawRare(); }));
+$('rare-tint').addEventListener('input',e=>{ rd.tint=e.target.value.toUpperCase(); drawRare(); });
+$('rare-ink').addEventListener('input',e=>{ rd.ink=e.target.value.toUpperCase(); drawRare(); });
+$('rare-save').addEventListener('click',async()=>{
+  const code=rdCode; if(!code) return;
+  const st={texture:rd.texture||null,strength:Math.round(rd.strength*100)/100,tint:rd.tint,ink:rd.ink,weight:rd.weight,radius:rd.radius};
+  try{ await api.setRare(code,st); closeRare(); toast(`Code ${code} is now a rare code.`); }
+  catch(err){ fail('save the rare code')(err); }
+});
+twoStep($('rare-remove'),async()=>{
+  const code=rdCode; if(!code) return;
+  try{ await api.clearRare(code); closeRare(); toast(`Code ${code} is a normal code again.`); }
+  catch(err){ fail('change the code')(err); }
+},{title:'Make this a normal code?',text:'The rare look is removed for good.',ok:'Make normal'});
+
 /* chat history of one account: every message it has sent, including ones users no longer see */
 let histUnsub=null;
 function openHistory(code,name){
   closeHistory();
   $('hist-title').textContent=name||`Code ${code}`; $('hist-sub').textContent='Loading…';
   $('hist-list').replaceChildren(); $('hist-wrap').hidden=false;
-  histUnsub=api.watchUser(code,list=>{
+  let msgs=[], dms=[];
+  const draw=()=>{
+    const list=[...msgs.map(m=>({...m,t:'msg'})),...dms.map(d=>({...d,t:'dm'}))].sort((a,b)=>a.ts-b.ts);
     const box=$('hist-list'), cutoff=Date.now()-TTL, atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
-    const latest=list.length?list[list.length-1]:null;
-    $('hist-dot').style.background=shadeOf(latest&&latest.shade,latest&&latest.kind).bg;
-    const names=[...new Set(list.map(m=>m.username))];
-    $('hist-sub').textContent=`Code ${code} · ${list.length} message${list.length===1?'':'s'}`+
-      (list.length?` · ${list.filter(m=>m.ts>cutoff).length} still visible in the chat`:'')+
+    const latest=msgs.length?msgs[msgs.length-1]:null, c0=codeList.find(x=>x.code===code);
+    $('hist-dot').style.background=lookOf(code,latest?latest.shade:c0&&c0.shade,(latest&&latest.kind)||(c0&&c0.kind),c0&&c0.tint).bg;
+    const names=[...new Set(msgs.map(m=>m.username))], lk=likeCount[code]||0;
+    $('hist-sub').textContent=`Code ${code} · ${msgs.length} message${msgs.length===1?'':'s'} · ${dms.length} private`+
+      (msgs.length?` · ${msgs.filter(m=>m.ts>cutoff).length} still visible in the chat`:'')+` · ${lk} like${lk===1?'':'s'}`+
       (names.length>1?` · also posted as ${names.filter(n=>n!==name).join(', ')}`:'');
     box.replaceChildren();
     if(!list.length){ box.append(mk('p','empty','No messages from this account.')); return; }
     let prev=null;
     for(const m of list){
       if(!prev || new Date(m.ts).toDateString()!==new Date(prev.ts).toDateString()) box.append(mk('div','stamp',new Date(m.ts).toDateString()===new Date().toDateString()?'Today':new Date(m.ts).toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'})));
-      const c=shadeOf(m.shade,m.kind), b=mk('div','bubble glass tinted'+(m.kind==='blue'?' blue':'')+(m.ts<=cutoff?' old':''),m.text);
-      b.style.setProperty('--tint',c.tint); b.style.color=c.ink; if(m.kind==='blue') b.style.setProperty('--fd',floatDelay(m.id));
+      if(m.t==='dm'){ // private message, sent by this account (right) or to it (left)
+        const sent=m.from===code, other=sent?m.to:m.from, oc=codeList.find(x=>x.code===other);
+        const b=mk('div','bubble glass tinted pm'+(sent?' sent':''),m.text);
+        paint(b,sent?lookOf(code,latest&&latest.shade,c0&&c0.kind,c0&&c0.tint):lookOf(other,oc&&oc.shade,oc&&oc.kind,oc&&oc.tint),null);
+        const meta=mk('div','meta'+(sent?' sent':''),fmtTime(m.ts));
+        meta.append(mk('span','pm-tag',sent?`Private to ${m.toName}`:`Private from ${m.fromName}`));
+        meta.append(twoStep(btn('Delete','danger'),()=>api.deleteDM(m.id).then(()=>toast('Private message deleted.'),fail('delete the message')),
+          {title:'Delete this private message?',text:`“${m.text.slice(0,80)}${m.text.length>80?'…':''}” will be removed for good.`}));
+        box.append(b,meta); prev=m; continue;
+      }
+      const b=mk('div','bubble glass tinted'+(m.ts<=cutoff?' old':''),m.text); paint(b,lookOf(code,m.shade,m.kind,m.tint),m.kind,m.id);
       const meta=mk('div','meta',fmtTime(m.ts)+(m.username!==name?` · as ${m.username}`:''));
       if(m.ts<=cutoff) meta.append(mk('span','tag','hidden from users'));
-      meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).then(()=>toast('Message deleted.'),fail('delete the message'))));
+      meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).then(()=>toast('Message deleted.'),fail('delete the message')),
+        {title:'Delete this message?',text:`“${m.text.slice(0,80)}${m.text.length>80?'…':''}” will be removed for everyone.`}));
       box.append(b,meta); prev=m;
     }
     if(atBottom||box.dataset.first!=='0'){ box.scrollTop=box.scrollHeight; box.dataset.first='0'; }
-  });
+  };
+  const u1=api.watchUser(code,l=>{ msgs=l; draw(); }), u2=api.watchUserDMs(code,l=>{ dms=l; draw(); });
+  histUnsub=()=>{ u1(); u2(); };
 }
 function closeHistory(){ histUnsub&&histUnsub(); histUnsub=null; $('hist-wrap').hidden=true; $('hist-list').dataset.first='1'; }
 $('hist-close').addEventListener('click',closeHistory);
@@ -1366,8 +1782,12 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeHistory(); })
 
 /* messages tab */
 let adminMsgs=[];
-twoStep($('a-clearall'),async()=>{
-  try{ const n=await api.clearMessages(); toast(`Cleared ${n} message${n===1?'':'s'}.`); }
+// clearing everything is asked twice
+$('a-clearall').addEventListener('click',async()=>{
+  const n=adminMsgs.length; if(!n) return toast('There are no messages.');
+  if(!await confirmBox(`Delete all ${n} message${n===1?'':'s'}?`,'Every message in the chat is removed for everyone, including the ones only you can still see.','Continue')) return;
+  if(!await confirmBox('Are you completely sure?',"This can't be undone. Private messages are kept.",`Delete ${n}`)) return;
+  try{ const k=await api.clearMessages(); toast(`Cleared ${k} message${k===1?'':'s'}.`); }
   catch(err){ fail('clear the messages')(err); }
 });
 setInterval(()=>adminOn&&renderAdminMsgs(adminMsgs),60e3);
@@ -1378,11 +1798,12 @@ function renderAdminMsgs(list){
   box.replaceChildren();
   for(const m of list){
     const old=m.ts<=cutoff, row=mk('div','amsg glass card'+(old?' old':'')), meta=mk('div','amsg-meta');
-    const d=mk('span','dot'); d.style.background=shadeOf(m.shade,m.kind).bg;
+    const d=mk('span','dot'); d.style.background=lookOf(m.code,m.shade,m.kind,m.tint).bg;
     const who=mk('button','who-btn',m.username); who.type='button'; who.title='Show chat history'; who.addEventListener('click',()=>openHistory(m.code,m.username));
     meta.append(d, who, mk('span','grow',`code ${m.code} · ${fmtDay(m.ts)}`));
     if(old) meta.append(mk('span','tag','hidden from users'));
-    meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).catch(fail('delete the message'))));
+    meta.append(twoStep(btn('Delete','danger'),()=>api.deleteMessage(m.id).then(()=>toast('Message deleted.'),fail('delete the message')),
+      {title:'Delete this message?',text:`“${m.text.slice(0,80)}${m.text.length>80?'…':''}” from ${m.username} will be removed for everyone.`}));
     row.append(meta, mk('div','amsg-text',m.text)); box.append(row);
   }
 }
